@@ -105,6 +105,20 @@
     border-radius:999px;padding:12px 26px;cursor:pointer;transition:all .2s}
   .newday-btn:hover{background:rgba(201,169,106,.28)}
 
+  /* índice */
+  .idx-list{flex:1;min-height:0;overflow-y:auto;scrollbar-width:none}
+  .idx-list::-webkit-scrollbar{display:none}
+  .idx-day{margin-bottom:1.1rem}
+  .idx-daytag{font-family:'Cormorant Garamond',serif;font-style:italic;color:var(--ink-soft);font-size:.95rem;margin-bottom:.25rem}
+  .idx-link{display:flex;width:100%;align-items:baseline;gap:8px;background:none;border:none;
+    border-bottom:1px dashed var(--line);padding:7px 2px;font-family:'Lora',serif;font-size:.85rem;
+    color:var(--ink);cursor:pointer;text-align:left}
+  .idx-link:hover{color:#7a5f2e}
+  .idx-link .idx-label{flex:1}
+  .idx-link .idx-num{color:var(--ink-soft);font-size:.72rem}
+  .idx-empty{color:var(--ink-soft);font-style:italic;font-size:.85rem}
+  .pgnum{position:absolute;bottom:9px;right:14px;font-size:.62rem;letter-spacing:.06em;color:var(--ink-soft);opacity:.65}
+
   /* ===== libro 3D (PC) ===== */
   .scene{perspective:2400px;width:var(--bw);height:var(--bh);position:relative}
   .book{width:100%;height:100%;position:relative;transform-style:preserve-3d}
@@ -256,6 +270,7 @@ const isFree=(d,id)=>!!(dayMeta(d).free&&dayMeta(d).free[id]);
 
 /* ---- páginas ---- */
 let PAGES=[];
+let INDEX_ENTRIES=[];
 function buildPages(){
   PAGES=[];
   PAGES.push({type:'cover'});
@@ -263,6 +278,7 @@ function buildPages(){
       <p>«Y si alguno prevaleciere contra uno,<br>dos le resistirán;<br>y cordón de tres dobleces<br>no se rompe pronto.»</p>
       <p style="margin-top:1.4rem;font-size:.95rem;opacity:.8">— Eclesiastés 4:12 (RVR1960)</p>
     </div></div>`});
+  PAGES.push({type:'index'});
   meta().days.forEach((dm,d)=>{
     SECTIONS.forEach(sec=>{
       const n=pcount(d,sec.id);
@@ -274,6 +290,14 @@ function buildPages(){
       <p>✦<br><br>«Antes bien, creced en la gracia<br>y el conocimiento de nuestro<br>Señor y Salvador Jesucristo.<br>A él sea gloria ahora y hasta<br>el día de la eternidad. Amén.»<br><br>2 Pedro 3:18 (RVR1960)</p>
     </div></div>`});
   if(PAGES.length%2)PAGES.push({type:'blank'});
+
+  INDEX_ENTRIES=meta().days.map((dm,d)=>{
+    const items=SECTIONS.map(sec=>{
+      const idx=PAGES.findIndex(pg=>pg.type==='sec'&&pg.d===d&&pg.sec.id===sec.id&&pg.p===0);
+      return idx>=0?{label:sec.label,idx}:null;
+    }).filter(Boolean);
+    return {tag:`Día ${d+1}`,items};
+  });
 }
 
 function toolsHTML(pid){
@@ -284,7 +308,7 @@ function toolsHTML(pid){
   </span>`;
 }
 
-function pageEl(d){
+function pageEl(d,idx){
   const w=document.createElement('div');
   if(d.type==='cover'){
     w.innerHTML=`<div class="cover-page" data-open role="button" tabindex="0" aria-label="Abrir el cuaderno">
@@ -300,6 +324,20 @@ function pageEl(d){
     w.innerHTML=d.html;
   }else if(d.type==='blank'){
     w.innerHTML=`<div class="pg"></div>`;
+  }else if(d.type==='index'){
+    const hasAny=INDEX_ENTRIES.some(day=>day.items.length);
+    w.innerHTML=`<div class="pg">
+      <div class="eyebrow">Índice</div>
+      <h2>Contenido</h2>
+      <div class="idx-list">
+        ${hasAny?INDEX_ENTRIES.map(day=>day.items.length?`
+          <div class="idx-day">
+            <div class="idx-daytag">${day.tag}</div>
+            ${day.items.map(it=>`<button class="idx-link" data-action="goto" data-idx="${it.idx}">
+              <span class="idx-label">${it.label}</span><span class="idx-num">pág. ${it.idx+1}</span></button>`).join('')}
+          </div>`:'').join(''):'<p class="idx-empty">A medida que vayan escribiendo, aquí aparecerá el índice de cada día…</p>'}
+      </div>
+    </div>`;
   }else if(d.type==='newday'){
     w.innerHTML=`<div class="pg newday">
       <div class="eyebrow">Continuar</div>
@@ -327,6 +365,8 @@ function pageEl(d){
     }else{
       head=`<div class="eyebrow">${dayTag} · ${sec.label}</div><div class="cont-tag">…continuación (pág. ${p+1})</div>`;
     }
+    const total=PAGES.length-(PAGES[PAGES.length-1]&&PAGES[PAGES.length-1].type==='blank'?1:0);
+    const pgnum=(idx!=null)?`<div class="pgnum">${idx+1} / ${total}</div>`:'';
     w.innerHTML=`<div class="pg ${done?'sec-done':''}" data-pid="${pid}">
       ${head}
       <div class="write" contenteditable="true" data-k="${pid}" data-ph="${free?'Escribe aquí…':(p===0?(sec.ph||'Escribe aquí…'):'Sigo escribiendo…')}" role="textbox" aria-multiline="true" aria-label="${sec.label} página ${p+1}"></div>
@@ -337,6 +377,7 @@ function pageEl(d){
         ${last?`<button class="mini-btn" data-action="add" data-d="${day}" data-sec="${sec.id}">＋ Otra página</button>`:''}
         ${!done?`<button class="mini-btn done-btn" data-action="done" data-d="${day}" data-sec="${sec.id}">✓ Terminé</button>`:''}
       </div>
+      ${pgnum}
     </div>`;
     renderStickies(w.firstElementChild,pid);
   }
@@ -380,8 +421,8 @@ function rebuild(){
     const pf=PAGES[i],pb=PAGES[i+1];
     if(pf.type!=='cover'&&pf.type!=='dark')f.classList.add('paper');
     if(pb&&pb.type!=='cover'&&pb.type!=='dark')b.classList.add('paper');
-    f.appendChild(pageEl(pf));
-    if(pb)b.appendChild(pageEl(pb));
+    f.appendChild(pageEl(pf,i));
+    if(pb)b.appendChild(pageEl(pb,i+1));
     const s1=document.createElement('div');s1.className='shade';
     const s2=document.createElement('div');s2.className='shade';
     f.appendChild(s1);b.appendChild(s2);
@@ -394,9 +435,9 @@ function rebuild(){
   leaves.forEach((l,i)=>l.classList.toggle('flipped',i<dcur));
   dz();
   mbook.innerHTML='';
-  mpages=PAGES.map(d=>{
+  mpages=PAGES.map((d,i)=>{
     const el=document.createElement('div');el.className='mpage';
-    el.appendChild(pageEl(d));
+    el.appendChild(pageEl(d,i));
     const dim=document.createElement('div');dim.className='dim';
     el.appendChild(dim);mbook.appendChild(el);return el;
   });
@@ -566,6 +607,8 @@ document.addEventListener('click',e=>{
     if(!dayMeta(d).free)dayMeta(d).free={};
     dayMeta(d).free[id]=!dayMeta(d).free[id];
     queueSave();rebuild();
+  }else if(act==='goto'){
+    goTo(+btn.dataset.idx);
   }
 });
 
