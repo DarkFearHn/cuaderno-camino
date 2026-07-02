@@ -163,6 +163,14 @@
   @media (max-width:700px){
     .scene{display:none}.mobile-book{display:block}.swipe-hint{display:block}
     .pg{padding:18px 16px calc(12px + env(safe-area-inset-bottom))}
+    body{padding:0;justify-content:flex-start}
+    .mobile-book{width:100vw;width:100dvw;height:100vh;height:100dvh;border-radius:0;box-shadow:none;max-width:none}
+    #prevB,#nextB{display:none}
+    .controls{position:fixed;bottom:calc(8px + env(safe-area-inset-bottom));left:0;right:0;
+      justify-content:center;margin-top:0;pointer-events:none;z-index:80}
+    .controls .status{pointer-events:auto;background:rgba(0,0,0,.35);color:#fff;border-radius:999px;padding:4px 12px;min-width:0}
+    .swipe-hint{position:fixed;top:calc(8px + env(safe-area-inset-top));left:0;right:0;text-align:center;
+      color:rgba(255,255,255,.55);z-index:80;pointer-events:none}
   }
 </style>
 </head>
@@ -239,11 +247,12 @@ const SECTIONS=[
   {id:'notas2', label:'Mis notas', kind:'notas', nameKey:'n2'},
 ];
 
-let state={__meta:{days:[{pages:{},done:{}}],stickies:[]}};
+let state={__meta:{days:[{pages:{},done:{},free:{}}],stickies:[]}};
 const meta=()=>state.__meta;
 const dayMeta=d=>meta().days[d];
 const pcount=(d,id)=>dayMeta(d).pages[id]||1;
 const kp=(d,id,p)=>`d${d}_${id}_p${p}`;
+const isFree=(d,id)=>!!(dayMeta(d).free&&dayMeta(d).free[id]);
 
 /* ---- páginas ---- */
 let PAGES=[];
@@ -301,9 +310,12 @@ function pageEl(d){
     const {sec,p,last}=d, day=d.d;
     const pid=kp(day,sec.id,p);
     const done=dayMeta(day).done[sec.id];
+    const free=isFree(day,sec.id);
     let head='';
     const dayTag=`Día ${day+1}`;
-    if(sec.kind==='lectura'&&p===0){
+    if(free){
+      head=`<div class="eyebrow">${dayTag}</div>`;
+    }else if(sec.kind==='lectura'&&p===0){
       head=`<div class="eyebrow">${dayTag}</div>
             <input class="line-input" data-k="d${day}_dia" placeholder="¿Qué voy a leer hoy?" aria-label="Qué voy a leer hoy">
             <input class="line-input big" data-k="d${day}_ref" placeholder="Pasaje de hoy" aria-label="Referencia del pasaje" style="margin-top:.5rem">`;
@@ -317,9 +329,10 @@ function pageEl(d){
     }
     w.innerHTML=`<div class="pg ${done?'sec-done':''}" data-pid="${pid}">
       ${head}
-      <div class="write" contenteditable="true" data-k="${pid}" data-ph="${p===0?(sec.ph||'Escribe aquí…'):'Sigo escribiendo…'}" role="textbox" aria-multiline="true" aria-label="${sec.label} página ${p+1}"></div>
+      <div class="write" contenteditable="true" data-k="${pid}" data-ph="${free?'Escribe aquí…':(p===0?(sec.ph||'Escribe aquí…'):'Sigo escribiendo…')}" role="textbox" aria-multiline="true" aria-label="${sec.label} página ${p+1}"></div>
       <div class="pgfoot">
         ${toolsHTML(pid)}
+        <button class="tool-btn" data-action="togglefree" data-d="${day}" data-sec="${sec.id}" title="${free?'Restaurar guía':'Limpiar página (quitar guía)'}" aria-label="${free?'Restaurar guía':'Limpiar página'}">${free?'↺':'🧹'}</button>
         ${done?'<span class="done-mark">✓ Terminada</span>':''}
         ${last?`<button class="mini-btn" data-action="add" data-d="${day}" data-sec="${sec.id}">＋ Otra página</button>`:''}
         ${!done?`<button class="mini-btn done-btn" data-action="done" data-d="${day}" data-sec="${sec.id}">✓ Terminé</button>`:''}
@@ -536,7 +549,7 @@ document.addEventListener('click',e=>{
     else if(meta().days[d+1])goTo(secStart(d+1,'lectura'));
     else goTo(pageIndexOf(pg=>pg.type==='newday'));
   }else if(act==='newday'){
-    meta().days.push({pages:{},done:{}});
+    meta().days.push({pages:{},done:{},free:{}});
     queueSave();rebuild();
     goTo(secStart(meta().days.length-1,'lectura'));
   }else if(act==='sticky'){
@@ -548,6 +561,11 @@ document.addEventListener('click',e=>{
       c:STICKY_COLORS[n%STICKY_COLORS.length], text:''
     });
     queueSave();refreshStickies(pid);
+  }else if(act==='togglefree'){
+    const d=+btn.dataset.d,id=btn.dataset.sec;
+    if(!dayMeta(d).free)dayMeta(d).free={};
+    dayMeta(d).free[id]=!dayMeta(d).free[id];
+    queueSave();rebuild();
   }
 });
 
