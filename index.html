@@ -119,6 +119,25 @@
   .idx-empty{color:var(--ink-soft);font-style:italic;font-size:.85rem}
   .pgnum{position:absolute;bottom:9px;right:14px;font-size:.62rem;letter-spacing:.06em;color:var(--ink-soft);opacity:.65}
 
+  /* fotos como stickers */
+  .photo-sticker{background:#fff;padding:6px 6px 8px;border-radius:3px;box-shadow:0 6px 16px rgba(0,0,0,.28);
+    transform:rotate(var(--rot,0deg));width:auto}
+  .photo-img{display:block;max-width:150px;max-height:150px;border-radius:1px}
+  .photo-grip{cursor:grab}
+
+  /* selector de color de post-it */
+  .sticky-colors{display:flex;gap:5px;margin-top:6px;align-items:center}
+  .csw{width:15px;height:15px;border-radius:50%;border:1px solid rgba(0,0,0,.28);cursor:pointer;padding:0;flex:none}
+  .csw.custom{background:#fff;border:1px dashed var(--ink-soft);display:flex;align-items:center;justify-content:center;
+    font-size:10px;line-height:1;color:var(--ink-soft);overflow:hidden;position:relative}
+  .custom-color-input{position:absolute;inset:-2px;opacity:0;cursor:pointer;border:none;padding:0;width:120%;height:120%}
+
+  /* deshacer */
+  .undo-btn{background:none;border:1px solid var(--line);border-radius:999px;padding:4px 10px;
+    font-family:'Lora',serif;font-size:.72rem;color:var(--ink-soft);cursor:pointer}
+  .undo-btn:hover{color:var(--ink);border-color:var(--ink-soft)}
+  .undo-btn:disabled{opacity:.4;cursor:default}
+
   /* ===== libro 3D (PC) ===== */
   .scene{perspective:2400px;width:var(--bw);height:var(--bh);position:relative}
   .book{width:100%;height:100%;position:relative;transform-style:preserve-3d}
@@ -183,6 +202,7 @@
     .controls{position:fixed;bottom:calc(8px + env(safe-area-inset-bottom));left:0;right:0;
       justify-content:center;margin-top:0;pointer-events:none;z-index:80}
     .controls .status{pointer-events:auto;background:rgba(0,0,0,.35);color:#fff;border-radius:999px;padding:4px 12px;min-width:0}
+    .controls .undo-btn{pointer-events:auto;background:rgba(0,0,0,.35);color:#fff;border-color:rgba(255,255,255,.4)}
     .swipe-hint{position:fixed;top:calc(8px + env(safe-area-inset-top));left:0;right:0;text-align:center;
       color:rgba(255,255,255,.55);z-index:80;pointer-events:none}
   }
@@ -195,6 +215,7 @@
 
 <div class="controls">
   <button class="nav-btn" id="prevB">‹ Anterior</button>
+  <button class="undo-btn" id="undoB" title="Deshacer (Ctrl+Z)" aria-label="Deshacer">↺ Deshacer</button>
   <div class="status" id="status" role="status" aria-live="polite">&nbsp;</div>
   <button class="nav-btn" id="nextB">Abrir ›</button>
 </div>
@@ -305,6 +326,7 @@ function toolsHTML(pid){
     ${HL_COLORS.map(c=>`<button class="hl" data-hl="${c}" style="background:${c}" title="Resaltar" aria-label="Resaltar en color"></button>`).join('')}
     <button class="hl hl-erase" data-hl="erase" title="Quitar resaltado" aria-label="Quitar resaltado">⊘</button>
     <button class="tool-btn" data-action="sticky" data-pid="${pid}" title="Pegar post-it" aria-label="Pegar post-it">🗒</button>
+    <label class="tool-btn photo-btn" title="Subir foto" aria-label="Subir foto">📷<input type="file" accept="image/*" class="photo-input" data-pid="${pid}" hidden></label>
   </span>`;
 }
 
@@ -385,14 +407,28 @@ function pageEl(d,idx){
   return w.firstElementChild;
 }
 
-/* ---------- post-its ---------- */
+/* ---------- post-its y fotos ---------- */
 function stickyEl(s){
   const el=document.createElement('div');
-  el.className='sticky';el.dataset.sid=s.id;
-  el.style.left=s.x+'%';el.style.top=s.y+'%';el.style.background=s.c;
-  el.innerHTML=`<div class="grip"></div><button class="del" aria-label="Quitar post-it">✕</button>
-    <div class="stxt" contenteditable="true"></div>`;
-  el.querySelector('.stxt').innerText=s.text||'';
+  el.dataset.sid=s.id;
+  el.style.left=s.x+'%';el.style.top=s.y+'%';
+  if(s.type==='photo'){
+    el.className='sticky photo-sticker';
+    el.style.setProperty('--rot',(s.rot||0)+'deg');
+    el.innerHTML=`<div class="grip photo-grip"></div><button class="del" aria-label="Quitar foto">✕</button>
+      <img src="${s.src}" class="photo-img" draggable="false" alt="">`;
+  }else{
+    el.className='sticky';el.style.background=s.c;
+    el.innerHTML=`<div class="grip"></div><button class="del" aria-label="Quitar post-it">✕</button>
+      <div class="stxt" contenteditable="true"></div>
+      <div class="sticky-colors">
+        ${STICKY_COLORS.map(c=>`<button class="csw" data-c="${c}" style="background:${c}" title="Color" aria-label="Cambiar color"></button>`).join('')}
+        <label class="csw custom" title="Otro color…" aria-label="Elegir otro color">+
+          <input type="color" class="custom-color-input" value="${s.c}">
+        </label>
+      </div>`;
+    el.querySelector('.stxt').innerText=s.text||'';
+  }
   return el;
 }
 function renderStickies(pgEl,pid){
@@ -558,8 +594,10 @@ function goTo(p){
 }
 nextB.addEventListener('click',goNext);
 prevB.addEventListener('click',goPrev);
+document.getElementById('undoB').addEventListener('click',performUndo);
 window.addEventListener('resize',ui);
 document.addEventListener('keydown',e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();performUndo();return;}
   if(e.target.matches('input')||e.target.isContentEditable)return;
   if(e.key==='ArrowRight')goNext();if(e.key==='ArrowLeft')goPrev();
 });
@@ -580,11 +618,13 @@ document.addEventListener('click',e=>{
   if(!btn)return;
   const act=btn.dataset.action;
   if(act==='add'){
+    pushUndo();
     const d=+btn.dataset.d,id=btn.dataset.sec;
     dayMeta(d).pages[id]=pcount(d,id)+1;
     queueSave();rebuild();
     goTo(secStart(d,id)+pcount(d,id)-1);
   }else if(act==='done'){
+    pushUndo();
     const d=+btn.dataset.d,id=btn.dataset.sec;
     let n=pcount(d,id);
     while(n>1&&pageEmpty(kp(d,id,n-1))){
@@ -602,19 +642,22 @@ document.addEventListener('click',e=>{
     else if(meta().days[d+1])goTo(secStart(d+1,'lectura'));
     else goTo(pageIndexOf(pg=>pg.type==='newday'));
   }else if(act==='delpage'){
+    pushUndo();
     const d=+btn.dataset.d,id=btn.dataset.sec,p=+btn.dataset.p;
     const pid=kp(d,id,p);
-    if(!pageEmpty(pid)&&!confirm('Esta página tiene texto escrito. ¿Seguro que quieres eliminarla?'))return;
+    if(!pageEmpty(pid)&&!confirm('Esta página tiene texto escrito. ¿Seguro que quieres eliminarla?')){undoStack.pop();return;}
     delete state[pid];
     meta().stickies=meta().stickies.filter(s=>s.pid!==pid);
     dayMeta(d).pages[id]=p;
     queueSave();rebuild();
     goTo(secStart(d,id));
   }else if(act==='newday'){
+    pushUndo();
     meta().days.push({pages:{},done:{},free:{}});
     queueSave();rebuild();
     goTo(secStart(meta().days.length-1,'lectura'));
   }else if(act==='sticky'){
+    pushUndo();
     const pid=btn.dataset.pid;
     const n=meta().stickies.length;
     meta().stickies.push({
@@ -624,6 +667,7 @@ document.addEventListener('click',e=>{
     });
     queueSave();refreshStickies(pid);
   }else if(act==='togglefree'){
+    pushUndo();
     const d=+btn.dataset.d,id=btn.dataset.sec;
     if(!dayMeta(d).free)dayMeta(d).free={};
     dayMeta(d).free[id]=!dayMeta(d).free[id];
@@ -633,17 +677,74 @@ document.addEventListener('click',e=>{
   }
 });
 
-/* borrar post-it */
+/* borrar post-it o foto */
 document.addEventListener('click',e=>{
   const del=e.target.closest('.sticky .del');
   if(!del)return;
+  pushUndo();
   const sid=del.closest('.sticky').dataset.sid;
   const s=meta().stickies.find(x=>x.id===sid);
   meta().stickies=meta().stickies.filter(x=>x.id!==sid);
   queueSave();if(s)refreshStickies(s.pid);
 });
 
-/* arrastrar post-it (mouse y táctil) */
+/* cambiar color de post-it (preset o personalizado) */
+document.addEventListener('click',e=>{
+  const sw=e.target.closest('.csw:not(.custom)');
+  if(!sw)return;
+  const el=sw.closest('.sticky');
+  const s=meta().stickies.find(x=>x.id===el.dataset.sid);
+  if(!s)return;
+  pushUndo();
+  s.c=sw.dataset.c;
+  document.querySelectorAll(`.sticky[data-sid="${s.id}"]`).forEach(o=>o.style.background=s.c);
+  queueSave();
+});
+document.addEventListener('change',e=>{
+  const inp=e.target.closest('.custom-color-input');
+  if(!inp)return;
+  const el=inp.closest('.sticky');
+  const s=meta().stickies.find(x=>x.id===el.dataset.sid);
+  if(!s)return;
+  pushUndo();
+  s.c=inp.value;
+  document.querySelectorAll(`.sticky[data-sid="${s.id}"]`).forEach(o=>o.style.background=s.c);
+  queueSave();
+});
+
+/* subir foto y pegarla como sticker */
+document.addEventListener('change',e=>{
+  const inp=e.target.closest('.photo-input');
+  if(!inp||!inp.files||!inp.files[0])return;
+  const file=inp.files[0], pid=inp.dataset.pid;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const img=new Image();
+    img.onload=()=>{
+      const maxDim=480;
+      let w=img.width,h=img.height;
+      if(w>=h&&w>maxDim){h=Math.round(h*maxDim/w);w=maxDim;}
+      else if(h>w&&h>maxDim){w=Math.round(w*maxDim/h);h=maxDim;}
+      const canvas=document.createElement('canvas');
+      canvas.width=w;canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      const dataUrl=canvas.toDataURL('image/jpeg',0.72);
+      pushUndo();
+      meta().stickies.push({
+        id:'p'+Date.now()+Math.floor(Math.random()*999),
+        pid,type:'photo',src:dataUrl,
+        x:10+Math.random()*35,y:12+Math.random()*30,
+        rot:(Math.random()*16-8).toFixed(1)
+      });
+      queueSave();refreshStickies(pid);
+    };
+    img.src=ev.target.result;
+  };
+  reader.readAsDataURL(file);
+  inp.value='';
+});
+
+/* arrastrar post-it o foto (mouse y táctil) */
 let drag=null;
 document.addEventListener('pointerdown',e=>{
   const grip=e.target.closest('.sticky .grip');
@@ -651,6 +752,7 @@ document.addEventListener('pointerdown',e=>{
   const el=grip.closest('.sticky'), pg=el.closest('.pg');
   const s=meta().stickies.find(x=>x.id===el.dataset.sid);
   if(!s)return;
+  pushUndo();
   const r=pg.getBoundingClientRect();
   drag={el,pg,s,startX:e.clientX,startY:e.clientY,baseX:s.x,baseY:s.y};
   grip.setPointerCapture&&grip.setPointerCapture(e.pointerId);
@@ -702,6 +804,7 @@ document.addEventListener('click',e=>{
     const node=sel.anchorNode;
     return (node.nodeType===1?node:node.parentElement).closest('.write');})();
   if(!selDiv)return;
+  pushUndo();
   document.execCommand('styleWithCSS',false,true);
   if(hl.dataset.hl==='erase')document.execCommand('removeFormat');
   else document.execCommand('hiliteColor',false,hl.dataset.hl);
@@ -712,7 +815,22 @@ document.addEventListener('click',e=>{
 
 /* ---------- guardado compartido (Firebase) ---------- */
 const statusEl=document.getElementById('status');
-let timer=null,loaded=false;
+let timer=null,loaded=false,lastSavedJson=null;
+let undoStack=[];
+function pushUndo(){
+  undoStack.push(JSON.stringify(state));
+  if(undoStack.length>30)undoStack.shift();
+  updateUndoBtn();
+}
+function performUndo(){
+  if(!undoStack.length)return;
+  state=migrate(JSON.parse(undoStack.pop()));
+  if(!meta().stickies)meta().stickies=[];
+  rebuild();queueSave();
+  updateUndoBtn();
+  setStatus('Deshecho ↺','ok');setTimeout(()=>setStatus('\u00a0'),1500);
+}
+function updateUndoBtn(){const b=document.getElementById('undoB');if(b)b.disabled=!undoStack.length;}
 function setStatus(t,cls){statusEl.textContent=t;statusEl.className='status '+(cls||'')}
 function fill(){
   document.querySelectorAll('[data-k]').forEach(f=>{
@@ -747,12 +865,23 @@ async function load(){
 }
 function queueSave(){if(!loaded)return;setStatus('Guardando…','saving');clearTimeout(timer);timer=setTimeout(save,800);}
 async function save(){
+  const payload=JSON.stringify(state);
+  lastSavedJson=payload;
   try{
-    await cuadernoDoc.set({json:JSON.stringify(state),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+    await cuadernoDoc.set({json:payload,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
     setStatus('Guardado ✓','ok');
   }catch(e){console.error('Error al guardar en Firebase:',e);setStatus('Sin conexión de guardado','err')}
   setTimeout(()=>{if(statusEl.classList.contains('ok'))setStatus('\u00a0')},2200);
 }
+/* deshacer por lotes: guarda un punto de retorno al empezar a escribir, no en cada letra */
+let typingBatch=false,typingBatchTimer=null;
+document.addEventListener('beforeinput',e=>{
+  const f=e.target.closest('[data-k], .stxt');
+  if(!f)return;
+  if(!typingBatch){pushUndo();typingBatch=true;}
+  clearTimeout(typingBatchTimer);
+  typingBatchTimer=setTimeout(()=>{typingBatch=false;},1200);
+});
 document.addEventListener('input',e=>{
   const f=e.target.closest('[data-k]');
   if(!f)return;
@@ -783,14 +912,21 @@ cuadernoDoc.onSnapshot(snap=>{
   if(suppressNextSnapshot){suppressNextSnapshot=false;return;}
   if(!loaded||!snap.exists||!snap.data().json)return;
   const incoming=snap.data().json;
-  if(incoming===JSON.stringify(state))return; // es nuestro propio guardado, ignorar
+  if(incoming===lastSavedJson)return; // es el eco de nuestro propio guardado, ignorar
   state=migrate(JSON.parse(incoming));
   if(!meta().stickies)meta().stickies=[];
-  rebuild();
+  const activeEditing=document.activeElement&&
+    (document.activeElement.isContentEditable||document.activeElement.tagName==='INPUT');
+  if(activeEditing){
+    fill(); // solo rellena campos sin tocar el que estás escribiendo, para no sacarte del modo escritura
+  }else{
+    rebuild();
+  }
   setStatus('Actualizado ✓','ok');setTimeout(()=>setStatus('\u00a0'),2200);
 });
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&loaded)load();});
 load();
+updateUndoBtn();
 </script>
 </body>
 </html>
