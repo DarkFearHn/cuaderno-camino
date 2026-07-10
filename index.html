@@ -221,6 +221,102 @@
     .swipe-hint{position:fixed;top:calc(8px + env(safe-area-inset-top));left:0;right:0;text-align:center;
       color:rgba(255,255,255,.55);z-index:80;pointer-events:none}
   }
+
+  /* ===== Biblia: lomo, lector y citas ===== */
+  .bible-spine{position:fixed;left:14px;top:50%;transform:translateY(-50%);
+    width:52px;height:236px;border:none;cursor:pointer;z-index:70;padding:0;
+    background:linear-gradient(90deg,var(--cover-deep),var(--cover) 42%,var(--cover) 58%,var(--cover-deep));
+    border-radius:4px 9px 9px 4px;box-shadow:0 14px 30px rgba(20,25,45,.4),inset 0 0 0 1px rgba(201,169,106,.5);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+    color:var(--foil);transition:transform .18s,box-shadow .18s}
+  .bible-spine:hover{transform:translateY(-50%) translateX(3px);box-shadow:0 16px 34px rgba(20,25,45,.5),inset 0 0 0 1px rgba(201,169,106,.85)}
+  .bible-spine::before{content:"";position:absolute;inset:5px 6px;border:1px solid rgba(201,169,106,.35);border-radius:3px;pointer-events:none}
+  .bible-spine-title{writing-mode:vertical-rl;transform:rotate(180deg);font-family:'Cormorant Garamond',serif;
+    font-weight:600;font-size:1.05rem;letter-spacing:.2em;text-transform:uppercase}
+  .bible-spine-sub{writing-mode:vertical-rl;transform:rotate(180deg);font-size:.52rem;letter-spacing:.24em;opacity:.72}
+  .bible-open-m{display:none}
+
+  /* lector de la Biblia */
+  .reader{position:fixed;inset:0;z-index:300;display:none;background:rgba(15,20,35,.55);
+    align-items:center;justify-content:center;padding:14px}
+  .reader.open{display:flex}
+  .reader-panel{width:min(680px,96vw);height:min(90vh,900px);background:var(--paper);
+    border-radius:10px;box-shadow:0 30px 70px rgba(10,15,30,.55),inset 0 0 0 1px rgba(201,169,106,.4);
+    display:flex;flex-direction:column;overflow:hidden}
+  .reader-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;
+    background:var(--cover);color:var(--foil)}
+  .reader-title{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:1.3rem;letter-spacing:.04em}
+  .reader-ver{font-family:'Lora',serif;font-style:italic;font-size:.72rem;opacity:.82;margin-left:8px}
+  .reader-x{background:none;border:1px solid rgba(201,169,106,.5);color:var(--foil);border-radius:50%;
+    width:28px;height:28px;cursor:pointer;font-size:12px;line-height:1;flex:none}
+  .reader-x:hover{background:rgba(201,169,106,.18)}
+  .reader-nav{display:flex;gap:8px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+  .rd-select{font-family:'Lora',serif;font-size:.85rem;color:var(--ink);background:var(--paper);
+    border:1px solid var(--line);border-radius:8px;padding:8px 9px;cursor:pointer;flex:1;min-width:0}
+  .rd-select.rd-ch{flex:0 0 88px}
+  .rd-arrow{border:1px solid var(--line);background:transparent;border-radius:8px;width:36px;height:36px;
+    cursor:pointer;font-size:17px;color:var(--ink-soft);flex:none}
+  .rd-arrow:hover{border-color:var(--foil);color:var(--ink)}
+  .rd-arrow:disabled{opacity:.35;cursor:default}
+  .reader-body{flex:1;min-height:0;overflow-y:auto;padding:18px 22px 26px;
+    font-family:'Lora',serif;font-size:1.02rem;line-height:1.9;color:var(--ink)}
+  .r-chaptitle{font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:600;margin-bottom:.7rem;color:#4a3f2c}
+  .verse{cursor:pointer;border-radius:4px;padding:1px 3px;transition:background .12s}
+  .verse:hover{background:rgba(201,169,106,.12)}
+  .verse.sel{background:rgba(201,169,106,.34)}
+  .vnum{font-size:.62rem;color:#a9884e;font-weight:600;vertical-align:super;margin-right:2px}
+  .reader-citebar{display:none;align-items:center;gap:10px;padding:12px 16px;
+    border-top:1px solid var(--line);background:rgba(201,169,106,.09);flex-wrap:wrap}
+  .reader-citebar.on{display:flex}
+  #readerCiteLabel{font-family:'Cormorant Garamond',serif;font-style:italic;color:var(--ink-soft);font-size:.95rem;margin-right:auto}
+  .rd-cite-btn{font-family:'Lora',serif;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;
+    border:1.5px solid var(--foil);background:rgba(201,169,106,.16);color:#7a5f2e;border-radius:999px;padding:9px 16px;cursor:pointer}
+  .rd-cite-btn:hover{background:rgba(201,169,106,.3)}
+  .rd-cite-btn:disabled{opacity:.4;cursor:default}
+  .rd-cite-clear{font-family:'Lora',serif;font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;
+    border:1px solid var(--line);background:transparent;color:var(--ink-soft);border-radius:999px;padding:8px 12px;cursor:pointer}
+  .rd-loading,.rd-error{font-family:'Cormorant Garamond',serif;font-style:italic;color:var(--ink-soft);text-align:center;padding:30px 10px}
+  .rd-error{color:#9c4a3a}
+  .rd-retry{display:inline-block;margin-top:10px;font-family:'Lora',serif;font-size:.72rem;
+    border:1px solid var(--line);border-radius:999px;padding:6px 14px;cursor:pointer;background:transparent;color:var(--ink)}
+
+  /* modal de cita */
+  .cite-modal{position:fixed;inset:0;z-index:320;display:none;background:rgba(15,20,35,.55);
+    align-items:center;justify-content:center;padding:14px}
+  .cite-modal.open{display:flex}
+  .cite-card{width:min(460px,96vw);max-height:90vh;background:var(--paper);border-radius:10px;
+    box-shadow:0 30px 70px rgba(10,15,30,.55),inset 0 0 0 1px rgba(201,169,106,.4);display:flex;flex-direction:column;overflow:hidden}
+  .cite-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:var(--cover);color:var(--foil)}
+  .cite-title{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:1.2rem}
+  .cite-controls{display:flex;gap:8px;padding:14px 16px 8px}
+  .cite-verses{padding:6px 16px 4px;overflow-y:auto;flex:1;min-height:64px;display:flex;flex-wrap:wrap;gap:6px;align-content:flex-start}
+  .cite-vchip{font-family:'Lora',serif;font-size:.8rem;border:1px solid var(--line);background:var(--paper);
+    color:var(--ink);border-radius:8px;padding:6px 0;width:38px;text-align:center;cursor:pointer}
+  .cite-vchip:hover{border-color:var(--foil)}
+  .cite-vchip.sel{background:rgba(201,169,106,.32);border-color:var(--foil);color:#5a4620}
+  .cite-preview{padding:10px 16px;font-family:'Cormorant Garamond',serif;font-style:italic;color:var(--ink-soft);
+    font-size:.95rem;line-height:1.5;border-top:1px solid var(--line);max-height:130px;overflow-y:auto}
+  .cite-preview:empty::before{content:'Elige uno o más versículos para ver la cita…';opacity:.7}
+  .cite-actions{display:flex;gap:8px;justify-content:flex-end;padding:12px 16px;border-top:1px solid var(--line)}
+  .cite-btn{color:#7a5f2e}
+
+  /* aviso flotante */
+  .toast{position:fixed;left:50%;bottom:calc(72px + env(safe-area-inset-bottom));
+    transform:translateX(-50%) translateY(20px);background:var(--cover);color:var(--foil);
+    font-family:'Lora',serif;font-size:.8rem;padding:10px 18px;border-radius:999px;
+    box-shadow:0 10px 26px rgba(10,15,30,.4);opacity:0;pointer-events:none;
+    transition:opacity .25s,transform .25s;z-index:400;max-width:88vw;text-align:center}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  @media (max-width:700px){
+    .bible-spine{display:none}
+    .bible-open-m{display:inline-flex;align-items:center;gap:5px;position:fixed;
+      top:calc(8px + env(safe-area-inset-top));right:12px;z-index:82;
+      font-family:'Lora',serif;font-size:.7rem;letter-spacing:.04em;
+      background:rgba(20,31,53,.92);color:var(--foil);border:1px solid rgba(201,169,106,.6);
+      border-radius:999px;padding:6px 12px;cursor:pointer}
+    .reader-panel{width:100vw;width:100dvw;height:100vh;height:100dvh;border-radius:0}
+  }
 </style>
 </head>
 <body>
@@ -240,6 +336,55 @@
   <div class="cp-title"><img id="cpIcon" src="" alt="">Elige un color</div>
   <div class="cp-swatches" id="cpSwatches"></div>
 </div>
+
+<!-- Biblia: lomo (PC), botón (móvil), lector y modal de cita -->
+<button class="bible-spine" id="bibleSpine" aria-label="Abrir la Biblia para leer">
+  <span class="bible-spine-title">La Biblia</span>
+  <span class="bible-spine-sub">RVR 1960</span>
+</button>
+<button class="bible-open-m" id="bibleOpenM" aria-label="Abrir la Biblia">📖 Biblia</button>
+
+<div class="reader" id="reader" aria-hidden="true" role="dialog" aria-label="Lectura de la Biblia">
+  <div class="reader-panel">
+    <div class="reader-head">
+      <div class="reader-title">La Biblia <span class="reader-ver" id="readerVer">Reina-Valera 1960</span></div>
+      <button class="reader-x" id="readerClose" aria-label="Cerrar la Biblia">✕</button>
+    </div>
+    <div class="reader-nav">
+      <select class="rd-select" id="rdBook" aria-label="Libro"></select>
+      <select class="rd-select rd-ch" id="rdChap" aria-label="Capítulo"></select>
+      <button class="rd-arrow" id="rdPrev" aria-label="Capítulo anterior">‹</button>
+      <button class="rd-arrow" id="rdNext" aria-label="Capítulo siguiente">›</button>
+    </div>
+    <div class="reader-body" id="readerBody"></div>
+    <div class="reader-citebar" id="readerCiteBar">
+      <span id="readerCiteLabel"></span>
+      <button class="rd-cite-clear" id="readerCiteClear">Limpiar</button>
+      <button class="rd-cite-btn" id="readerCiteBtn">Citar en el cuaderno</button>
+    </div>
+  </div>
+</div>
+
+<div class="cite-modal" id="citeModal" aria-hidden="true" role="dialog" aria-label="Citar un versículo">
+  <div class="cite-card">
+    <div class="cite-head">
+      <div class="cite-title">Citar un versículo</div>
+      <button class="reader-x" id="citeClose" aria-label="Cerrar">✕</button>
+    </div>
+    <div class="cite-controls">
+      <select class="rd-select" id="ctBook" aria-label="Libro"></select>
+      <select class="rd-select rd-ch" id="ctChap" aria-label="Capítulo"></select>
+    </div>
+    <div class="cite-verses" id="citeVerses"></div>
+    <div class="cite-preview" id="citePreview"></div>
+    <div class="cite-actions">
+      <button class="rd-cite-clear" id="citeCancel">Cancelar</button>
+      <button class="rd-cite-btn" id="citePaste" disabled>Pegar en la página</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <!-- Firebase (base de datos compartida) -->
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
@@ -355,6 +500,7 @@ function toolsHTML(pid){
     <button class="hl hl-erase" data-hl="erase" title="Quitar resaltado" aria-label="Quitar resaltado">⊘</button>
     <button class="tool-btn" data-action="sticky" data-pid="${pid}" title="Pegar post-it" aria-label="Pegar post-it"><img src="${ICON_STICKY}" alt=""></button>
     <label class="tool-btn photo-btn" title="Subir foto" aria-label="Subir foto"><img src="${ICON_PHOTO}" alt=""><input type="file" accept="image/*" class="photo-input" data-pid="${pid}" hidden></label>
+    <button class="tool-btn cite-btn" data-action="cite" data-pid="${pid}" title="Citar un versículo de la Biblia" aria-label="Citar un versículo">✝</button>
   </span>`;
 }
 
@@ -998,6 +1144,251 @@ cuadernoDoc.onSnapshot(snap=>{
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&loaded)load();});
 load();
 updateUndoBtn();
+
+/* ================= Biblia: lectura y citas ================= */
+/* Se consulta la Biblia en vivo desde dos servicios: se intenta el primero de
+   'order' y, si falla (servidor caído, sin conexión, etc.), se usa el siguiente.
+   - deno  -> bible-api.deno.dev  (traducciones: rv1960, rv1995, nvi, dhh, pdt)
+   - bolls -> bolls.life          (traducciones: RV1960, RV2004, NVI, NTV, PDT)
+   Para cambiar de versión edita denoTranslation, bollsTranslation y label.
+   Para invertir principal/respaldo, cambia el orden de 'order'.
+   (RVR1960 tiene derechos de Sociedades Bíblicas; aquí solo se consulta en vivo
+   para lectura/estudio personal, el texto no se aloja en este archivo.) */
+const BIBLE={
+  label:'Reina-Valera 1960',
+  order:['deno','bolls'],
+  denoTranslation:'rv1960',
+  bollsTranslation:'RV1960'
+};
+
+const BIBLE_BOOKS=[
+ {n:1,name:'Génesis',ch:50},{n:2,name:'Éxodo',ch:40},{n:3,name:'Levítico',ch:27},
+ {n:4,name:'Números',ch:36},{n:5,name:'Deuteronomio',ch:34},{n:6,name:'Josué',ch:24},
+ {n:7,name:'Jueces',ch:21},{n:8,name:'Rut',ch:4},{n:9,name:'1 Samuel',ch:31},
+ {n:10,name:'2 Samuel',ch:24},{n:11,name:'1 Reyes',ch:22},{n:12,name:'2 Reyes',ch:25},
+ {n:13,name:'1 Crónicas',ch:29},{n:14,name:'2 Crónicas',ch:36},{n:15,name:'Esdras',ch:10},
+ {n:16,name:'Nehemías',ch:13},{n:17,name:'Ester',ch:10},{n:18,name:'Job',ch:42},
+ {n:19,name:'Salmos',ch:150},{n:20,name:'Proverbios',ch:31},{n:21,name:'Eclesiastés',ch:12},
+ {n:22,name:'Cantares',ch:8},{n:23,name:'Isaías',ch:66},{n:24,name:'Jeremías',ch:52},
+ {n:25,name:'Lamentaciones',ch:5},{n:26,name:'Ezequiel',ch:48},{n:27,name:'Daniel',ch:12},
+ {n:28,name:'Oseas',ch:14},{n:29,name:'Joel',ch:3},{n:30,name:'Amós',ch:9},
+ {n:31,name:'Abdías',ch:1},{n:32,name:'Jonás',ch:4},{n:33,name:'Miqueas',ch:7},
+ {n:34,name:'Nahúm',ch:3},{n:35,name:'Habacuc',ch:3},{n:36,name:'Sofonías',ch:3},
+ {n:37,name:'Hageo',ch:2},{n:38,name:'Zacarías',ch:14},{n:39,name:'Malaquías',ch:4},
+ {n:40,name:'Mateo',ch:28},{n:41,name:'Marcos',ch:16},{n:42,name:'Lucas',ch:24},
+ {n:43,name:'Juan',ch:21},{n:44,name:'Hechos',ch:28},{n:45,name:'Romanos',ch:16},
+ {n:46,name:'1 Corintios',ch:16},{n:47,name:'2 Corintios',ch:13},{n:48,name:'Gálatas',ch:6},
+ {n:49,name:'Efesios',ch:6},{n:50,name:'Filipenses',ch:4},{n:51,name:'Colosenses',ch:4},
+ {n:52,name:'1 Tesalonicenses',ch:5},{n:53,name:'2 Tesalonicenses',ch:3},{n:54,name:'1 Timoteo',ch:6},
+ {n:55,name:'2 Timoteo',ch:4},{n:56,name:'Tito',ch:3},{n:57,name:'Filemón',ch:1},
+ {n:58,name:'Hebreos',ch:13},{n:59,name:'Santiago',ch:5},{n:60,name:'1 Pedro',ch:5},
+ {n:61,name:'2 Pedro',ch:3},{n:62,name:'1 Juan',ch:5},{n:63,name:'2 Juan',ch:1},
+ {n:64,name:'3 Juan',ch:1},{n:65,name:'Judas',ch:1},{n:66,name:'Apocalipsis',ch:22}
+];
+const bookByNum=n=>BIBLE_BOOKS.find(b=>b.n===+n);
+const chapterCache={};
+function cleanVerse(t){
+  return String(t)
+    .replace(/<S>.*?<\/S>/gi,'')
+    .replace(/<f>.*?<\/f>/gi,'')
+    .replace(/<br\s*\/?>/gi,' ')
+    .replace(/<[^>]+>/g,'')
+    .replace(/\s+/g,' ').trim();
+}
+function stripAccents(s){return String(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'');}
+/* nombre del libro que usa bible-api.deno.dev, tomado de su propio /api/books
+   (así no adivinamos el "slug"); si no carga, se deriva del nombre local. */
+let denoBooksP=null;
+function loadDenoBooks(){
+  if(!denoBooksP)denoBooksP=fetch('https://bible-api.deno.dev/api/books')
+    .then(r=>{if(!r.ok)throw new Error('books');return r.json();}).catch(()=>null);
+  return denoBooksP;
+}
+async function denoBookId(bookNum){
+  const books=await loadDenoBooks();
+  if(Array.isArray(books)&&books[bookNum-1]&&books[bookNum-1].name)return String(books[bookNum-1].name).toLowerCase();
+  return stripAccents(bookByNum(bookNum).name).toLowerCase();
+}
+const BIBLE_SOURCES={
+  deno:async(bookNum,chapter)=>{
+    const id=await denoBookId(bookNum);
+    const r=await fetch(`https://bible-api.deno.dev/api/read/${BIBLE.denoTranslation}/${encodeURIComponent(id)}/${chapter}`);
+    if(!r.ok)throw new Error('deno '+r.status);
+    const d=await r.json();
+    const arr=(d&&d.vers)||[];
+    return arr.map(v=>({verse:+v.number,text:cleanVerse(v.verse)})).filter(v=>v.text).sort((a,b)=>a.verse-b.verse);
+  },
+  bolls:async(bookNum,chapter)=>{
+    const r=await fetch(`https://bolls.life/get-text/${BIBLE.bollsTranslation}/${bookNum}/${chapter}/`);
+    if(!r.ok)throw new Error('bolls '+r.status);
+    const d=await r.json();
+    return d.map(v=>({verse:+v.verse,text:cleanVerse(v.text)})).filter(v=>v.text).sort((a,b)=>a.verse-b.verse);
+  }
+};
+async function fetchChapter(book,chapter){
+  const key='rv1960-'+book+'-'+chapter;
+  if(chapterCache[key])return chapterCache[key];
+  let lastErr=null;
+  for(const src of BIBLE.order){
+    const fn=BIBLE_SOURCES[src];
+    if(!fn)continue;
+    try{
+      const verses=await fn(book,chapter);
+      if(verses&&verses.length){chapterCache[key]=verses;return verses;}
+    }catch(e){lastErr=e;}
+  }
+  throw lastErr||new Error('Sin fuentes disponibles');
+}
+function escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function fillBookSelect(sel){sel.innerHTML=BIBLE_BOOKS.map(b=>`<option value="${b.n}">${b.name}</option>`).join('');}
+function fillChapSelect(sel,bookNum){const b=bookByNum(bookNum);let o='';for(let i=1;i<=b.ch;i++)o+=`<option value="${i}">${i}</option>`;sel.innerHTML=o;}
+function rangeLabel(nums){
+  nums=[...nums].sort((a,b)=>a-b);
+  if(nums.length===1)return ''+nums[0];
+  const contiguous=nums[nums.length-1]-nums[0]===nums.length-1;
+  return contiguous?`${nums[0]}-${nums[nums.length-1]}`:nums.join(',');
+}
+function buildCitation(bookName,chapter,verseObjs){
+  const objs=[...verseObjs].sort((a,b)=>a.verse-b.verse);
+  const ref=`${bookName} ${chapter}:${rangeLabel(objs.map(v=>v.verse))}`;
+  const body=objs.map(v=>v.text).join(' ');
+  return `«${body}» — ${ref} (${BIBLE.label})`;
+}
+function insertCitation(pid,str){
+  if(!pid){toast('Abre una página del cuaderno para pegar la cita.');return false;}
+  pushUndo();
+  const esc=escapeHtml(str);
+  const prev=state[pid]||'';
+  state[pid]=prev?prev.replace(/(?:<br>\s*)+$/,'')+'<br><br>'+esc:esc;
+  document.querySelectorAll(`.write[data-k="${pid}"]`).forEach(o=>{o.innerHTML=state[pid];});
+  queueSave();
+  return true;
+}
+/* recordar la última página escrita (para citar desde el lector) */
+let lastWritePid=null;
+document.addEventListener('focusin',e=>{const w=e.target.closest('.write');if(w)lastWritePid=w.dataset.k;});
+function goToPid(pid){const idx=pageIndexOf(pg=>pg.type==='sec'&&kp(pg.d,pg.sec.id,pg.p)===pid);goTo(idx);}
+let toastT=null;
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),2600);}
+
+/* ---------- LECTOR ---------- */
+const readerEl=document.getElementById('reader');
+const rdBook=document.getElementById('rdBook'),rdChap=document.getElementById('rdChap');
+const rdBody=document.getElementById('readerBody');
+const rdPrev=document.getElementById('rdPrev'),rdNext=document.getElementById('rdNext');
+let rdSel=new Set();
+document.getElementById('readerVer').textContent=BIBLE.label;
+fillBookSelect(rdBook);fillChapSelect(rdChap,20);rdBook.value='20';rdChap.value='1';
+function openReader(){readerEl.classList.add('open');readerEl.setAttribute('aria-hidden','false');loadReader();}
+function closeReader(){readerEl.classList.remove('open');readerEl.setAttribute('aria-hidden','true');}
+async function loadReader(){
+  rdSel.clear();updateReaderCiteBar();
+  const bk=+rdBook.value,ch=+rdChap.value,b=bookByNum(bk);
+  rdPrev.disabled=(bk===1&&ch===1);
+  rdNext.disabled=(bk===66&&ch===b.ch);
+  rdBody.innerHTML=`<div class="rd-loading">Cargando ${b.name} ${ch}…</div>`;
+  try{
+    const verses=await fetchChapter(bk,ch);
+    rdBody.innerHTML=`<div class="r-chaptitle">${b.name} ${ch}</div>`+
+      verses.map(v=>`<span class="verse" data-v="${v.verse}"><span class="vnum">${v.verse}</span>${escapeHtml(v.text)}</span> `).join('');
+    rdBody.scrollTop=0;
+  }catch(err){
+    rdBody.innerHTML=`<div class="rd-error">No se pudo cargar el texto.<br>Revisa tu conexión a internet.<br><button class="rd-retry" id="rdRetry">Reintentar</button></div>`;
+    const rb=document.getElementById('rdRetry');if(rb)rb.onclick=loadReader;
+  }
+}
+rdBook.addEventListener('change',()=>{fillChapSelect(rdChap,+rdBook.value);rdChap.value='1';loadReader();});
+rdChap.addEventListener('change',loadReader);
+rdPrev.addEventListener('click',()=>{let bk=+rdBook.value,ch=+rdChap.value;if(ch>1)ch--;else if(bk>1){bk--;ch=bookByNum(bk).ch;}else return;rdBook.value=''+bk;fillChapSelect(rdChap,bk);rdChap.value=''+ch;loadReader();});
+rdNext.addEventListener('click',()=>{let bk=+rdBook.value,ch=+rdChap.value,b=bookByNum(bk);if(ch<b.ch)ch++;else if(bk<66){bk++;ch=1;}else return;rdBook.value=''+bk;fillChapSelect(rdChap,bk);rdChap.value=''+ch;loadReader();});
+document.getElementById('readerClose').addEventListener('click',closeReader);
+readerEl.addEventListener('click',e=>{if(e.target===readerEl)closeReader();});
+document.getElementById('bibleSpine').addEventListener('click',openReader);
+document.getElementById('bibleOpenM').addEventListener('click',openReader);
+rdBody.addEventListener('click',e=>{
+  const v=e.target.closest('.verse');if(!v)return;
+  const n=+v.dataset.v;
+  if(rdSel.has(n)){rdSel.delete(n);v.classList.remove('sel');}else{rdSel.add(n);v.classList.add('sel');}
+  updateReaderCiteBar();
+});
+function updateReaderCiteBar(){
+  const bar=document.getElementById('readerCiteBar');
+  if(!rdSel.size){bar.classList.remove('on');return;}
+  bar.classList.add('on');
+  const b=bookByNum(+rdBook.value);
+  document.getElementById('readerCiteLabel').textContent=`${b.name} ${rdChap.value}:${rangeLabel([...rdSel])} seleccionado`;
+}
+document.getElementById('readerCiteClear').addEventListener('click',()=>{rdSel.clear();rdBody.querySelectorAll('.verse.sel').forEach(v=>v.classList.remove('sel'));updateReaderCiteBar();});
+document.getElementById('readerCiteBtn').addEventListener('click',async()=>{
+  if(!rdSel.size)return;
+  const bk=+rdBook.value,ch=+rdChap.value,b=bookByNum(bk);
+  try{
+    const verses=await fetchChapter(bk,ch);
+    const chosen=verses.filter(v=>rdSel.has(v.verse));
+    const pid=lastWritePid;
+    if(insertCitation(pid,buildCitation(b.name,ch,chosen))){closeReader();toast('Cita agregada a tu página ✓');goToPid(pid);}
+  }catch(err){toast('No se pudo obtener el texto para citar.');}
+});
+
+/* ---------- MODAL DE CITA (desde la barra de la página) ---------- */
+const citeModal=document.getElementById('citeModal');
+const ctBook=document.getElementById('ctBook'),ctChap=document.getElementById('ctChap');
+const ctVerses=document.getElementById('citeVerses'),ctPreview=document.getElementById('citePreview');
+const ctPaste=document.getElementById('citePaste');
+let ctPid=null,ctSel=new Set(),ctLoaded=[],ctLastBook=20,ctLastChap=1;
+fillBookSelect(ctBook);fillChapSelect(ctChap,20);ctBook.value='20';ctChap.value='1';
+function openCite(pid){
+  ctPid=pid;ctSel.clear();ctPreview.textContent='';ctPaste.disabled=true;
+  ctBook.value=''+ctLastBook;fillChapSelect(ctChap,ctLastBook);ctChap.value=''+ctLastChap;
+  citeModal.classList.add('open');citeModal.setAttribute('aria-hidden','false');
+  loadCiteVerses();
+}
+function closeCite(){citeModal.classList.remove('open');citeModal.setAttribute('aria-hidden','true');ctPid=null;}
+async function loadCiteVerses(){
+  ctSel.clear();ctPreview.textContent='';ctPaste.disabled=true;
+  ctLastBook=+ctBook.value;ctLastChap=+ctChap.value;
+  const bk=+ctBook.value,ch=+ctChap.value,b=bookByNum(bk);
+  ctVerses.innerHTML=`<div class="rd-loading" style="width:100%">Cargando ${b.name} ${ch}…</div>`;
+  try{
+    ctLoaded=await fetchChapter(bk,ch);
+    ctVerses.innerHTML=ctLoaded.map(v=>`<button class="cite-vchip" data-v="${v.verse}">${v.verse}</button>`).join('');
+  }catch(err){
+    ctVerses.innerHTML=`<div class="rd-error" style="width:100%">No se pudo cargar.<br><button class="rd-retry" id="ctRetry">Reintentar</button></div>`;
+    const rb=document.getElementById('ctRetry');if(rb)rb.onclick=loadCiteVerses;
+  }
+}
+ctBook.addEventListener('change',()=>{fillChapSelect(ctChap,+ctBook.value);ctChap.value='1';loadCiteVerses();});
+ctChap.addEventListener('change',loadCiteVerses);
+ctVerses.addEventListener('click',e=>{
+  const chip=e.target.closest('.cite-vchip');if(!chip)return;
+  const n=+chip.dataset.v;
+  if(ctSel.has(n)){ctSel.delete(n);chip.classList.remove('sel');}else{ctSel.add(n);chip.classList.add('sel');}
+  updateCitePreview();
+});
+function updateCitePreview(){
+  if(!ctSel.size){ctPreview.textContent='';ctPaste.disabled=true;return;}
+  const b=bookByNum(+ctBook.value),ch=+ctChap.value;
+  ctPreview.textContent=buildCitation(b.name,ch,ctLoaded.filter(v=>ctSel.has(v.verse)));
+  ctPaste.disabled=false;
+}
+ctPaste.addEventListener('click',()=>{
+  if(!ctSel.size||!ctPid)return;
+  const b=bookByNum(+ctBook.value),ch=+ctChap.value;
+  const pid=ctPid;
+  if(insertCitation(pid,buildCitation(b.name,ch,ctLoaded.filter(v=>ctSel.has(v.verse))))){closeCite();toast('Cita pegada en tu página ✓');}
+});
+document.getElementById('citeClose').addEventListener('click',closeCite);
+document.getElementById('citeCancel').addEventListener('click',closeCite);
+citeModal.addEventListener('click',e=>{if(e.target===citeModal)closeCite();});
+document.addEventListener('click',e=>{const b=e.target.closest('[data-action="cite"]');if(b)openCite(b.dataset.pid);});
+
+/* teclado: Escape cierra; flechas no pasan la página de atrás mientras hay overlay */
+document.addEventListener('keydown',e=>{
+  const overlay=readerEl.classList.contains('open')||citeModal.classList.contains('open');
+  if(!overlay)return;
+  if(e.key==='Escape'){if(citeModal.classList.contains('open'))closeCite();else closeReader();e.stopPropagation();return;}
+  if(e.key==='ArrowLeft'||e.key==='ArrowRight')e.stopPropagation();
+},true);
 </script>
 </body>
 </html>
