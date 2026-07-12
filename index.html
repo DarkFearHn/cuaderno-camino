@@ -363,15 +363,26 @@
     overflow-x:auto;overflow-y:visible;padding:0 8px;scrollbar-width:none}
   .shelf-books::-webkit-scrollbar{display:none}
   .shelf-spine{position:relative;flex:none;width:var(--sw,34px);height:var(--h,140px);border:none;cursor:pointer;padding:0;
-    background:linear-gradient(90deg,#ddd5c2,#faf6ec 45%,#faf6ec 55%,#ddd5c2);
+    background:linear-gradient(90deg,#ccc3ac,#f6f1e4 45%,#f6f1e4 55%,#ccc3ac);
     background-size:cover;background-position:center;
     border-radius:2px 4px 4px 2px;box-shadow:-1px 8px 14px rgba(20,25,45,.28),inset 0 0 0 1px rgba(120,100,70,.3);
-    color:#6b5f4d;display:flex;align-items:center;justify-content:center;transition:transform .16s}
-  .shelf-spine.dark{color:var(--foil);box-shadow:-1px 8px 14px rgba(20,25,45,.3),inset 0 0 0 1px rgba(201,169,106,.5)}
-  .shelf-spine.dark .shelf-title{text-shadow:0 1px 3px rgba(0,0,0,.65)}
+    color:#6b5f4d;display:flex;align-items:center;justify-content:center;transition:transform .16s;overflow:hidden}
+  /* textura de tela + brillo del canto */
+  .shelf-spine::before{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;
+    background:repeating-linear-gradient(90deg,rgba(0,0,0,.05) 0 1px,transparent 1px 3px),
+      linear-gradient(90deg,rgba(255,255,255,.35),transparent 22%,transparent 78%,rgba(0,0,0,.22))}
+  /* fileteado dorado + bandas decorativas arriba y abajo (como la Biblia) */
+  .shelf-spine::after{content:"";position:absolute;inset:5px 3px;pointer-events:none;border-radius:2px;
+    border:1px solid var(--band,rgba(201,169,106,.7));
+    box-shadow:0 -14px 0 -13px var(--band,rgba(201,169,106,.7)),0 14px 0 -13px var(--band,rgba(201,169,106,.7)),
+      0 -18px 0 -13px var(--band,rgba(201,169,106,.7)),0 18px 0 -13px var(--band,rgba(201,169,106,.7))}
+  .shelf-spine.dark{color:var(--foil);--band:rgba(201,169,106,.85);
+    box-shadow:-1px 8px 14px rgba(20,25,45,.3),inset 0 0 0 1px rgba(201,169,106,.4)}
+  .shelf-spine.cover-spine::before,.shelf-spine.cover-spine::after{display:none}
+  .shelf-spine.dark .shelf-title{text-shadow:0 1px 3px rgba(0,0,0,.7)}
   .shelf-spine:hover{transform:translateY(-6px)}
-  .shelf-title{writing-mode:vertical-rl;transform:rotate(180deg);font-family:'Cormorant Garamond',serif;
-    font-weight:600;font-size:.72rem;letter-spacing:.08em;max-height:calc(var(--h,140px) - 30px);overflow:hidden;pointer-events:none}
+  .shelf-title{position:relative;z-index:1;writing-mode:vertical-rl;transform:rotate(180deg);font-family:'Cormorant Garamond',serif;
+    font-weight:600;font-size:.72rem;letter-spacing:.08em;max-height:calc(var(--h,140px) - 46px);overflow:hidden;pointer-events:none}
   .shelf-opts{position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:22px;height:22px;border-radius:50%;
     border:1px solid rgba(120,100,70,.6);background:rgba(255,255,255,.95);color:#5a4620;font-size:14px;font-weight:700;line-height:20px;
     text-align:center;cursor:pointer;display:block;box-shadow:0 2px 5px rgba(0,0,0,.25)}
@@ -389,6 +400,15 @@
   .cover-page.blank .cover-add{border-color:#a9884e;color:#7a5f2e}
   .cover-page.blank .cover-add:hover{background:rgba(201,169,106,.15);color:#5a4620}
   .cover-page.blank .cover-img{border-color:#c9b98f}
+  /* portada a toda la cara del libro */
+  .cover-page.has-cover{background-size:cover;background-position:center;background-repeat:no-repeat;position:relative}
+  .cover-page.has-cover::after{content:"";position:absolute;inset:0;pointer-events:none;
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,.25),inset 0 0 90px rgba(0,0,0,.28)}
+  .cover-add.floating{position:absolute;top:12px;right:12px;z-index:2;background:rgba(20,31,53,.72);
+    color:var(--foil);border-color:rgba(201,169,106,.65);backdrop-filter:blur(2px)}
+  .cover-add.floating:hover{background:rgba(20,31,53,.9);color:var(--foil)}
+  .hint.on-cover{position:absolute;bottom:16px;left:0;right:0;text-align:center;color:#fff;z-index:2;
+    text-shadow:0 1px 6px rgba(0,0,0,.7)}
   .shelf-menu{position:fixed;z-index:210;background:var(--paper);border:1px solid var(--line);
     border-radius:10px;padding:8px;box-shadow:0 10px 26px rgba(20,20,10,.28);display:none;
     flex-direction:column;gap:6px;min-width:180px}
@@ -614,13 +634,20 @@ function pageEl(d,idx){
   if(d.type==='cover'&&!isMainBook()){
     const t=escapeHtml(meta().title||(libEntry(currentBookId)||{}).title||'Nuevo estudio');
     const cov=meta().cover||'';
-    w.innerHTML=`<div class="cover-page blank" data-open role="button" tabindex="0" aria-label="Abrir el libro">
-      <div class="cover-inner">${corners}
-        ${cov?`<img class="cover-img" src="${cov}" alt="Portada">`:''}
-        <h1>${t}</h1>
-        <button class="mini-btn cover-add" data-action="setcover">＋ ${cov?'Cambiar portada':'Poner portada'}</button>
-        <div class="hint">Toca para abrir</div>
-      </div></div>`;
+    if(cov){
+      w.innerHTML=`<div class="cover-page has-cover" data-open role="button" tabindex="0" aria-label="Abrir el libro"
+        style="background-image:url('${cov}')">
+        <button class="mini-btn cover-add floating" data-action="setcover">＋ Cambiar portada</button>
+        <div class="hint on-cover">Toca para abrir</div>
+      </div>`;
+    }else{
+      w.innerHTML=`<div class="cover-page blank" data-open role="button" tabindex="0" aria-label="Abrir el libro">
+        <div class="cover-inner">${corners}
+          <h1>${t}</h1>
+          <button class="mini-btn cover-add" data-action="setcover">＋ Poner portada</button>
+          <div class="hint">Toca para abrir</div>
+        </div></div>`;
+    }
   }else if(d.type==='cover'){
     w.innerHTML=`<div class="cover-page" data-open role="button" tabindex="0" aria-label="Abrir el cuaderno">
       <div class="cover-inner">${corners}
@@ -1622,7 +1649,9 @@ function renderShelf(){
   shelf.innerHTML='<div class="shelf-books">'+entries.map(b=>{
     const dark=b.cover||(b.sc&&isDarkColor(b.sc));
     const h=b.main?150:shelfH(b.id), wv=b.main?40:shelfW(b.id);
-    return `<button class="shelf-spine ${dark?'dark':''}" data-book="${b.id}" title="Abrir «${escapeHtml(b.title)}»" style="--h:${h}px;--sw:${wv}px;${spineDecls(b)}">
+    const band=b.cover?'':(b.sc?(isDarkColor(b.sc)?'rgba(201,169,106,.85)':'rgba(150,120,70,.6)'):'rgba(180,150,100,.6)');
+    const bandVar=band?`--band:${band};`:'';
+    return `<button class="shelf-spine ${dark?'dark':''} ${b.cover?'cover-spine':''}" data-book="${b.id}" title="Abrir «${escapeHtml(b.title)}»" style="--h:${h}px;--sw:${wv}px;${bandVar}${spineDecls(b)}">
       <span class="shelf-title">${escapeHtml(b.title)}</span>
       ${b.main?'':`<span class="shelf-opts" data-opts="${b.id}" title="Opciones del libro" role="button">⋯</span>`}
     </button>`;
