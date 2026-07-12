@@ -103,8 +103,13 @@
   .sprites .sp-el{height:clamp(88px,15vh,132px)}
   .sprites .sp-helen{height:clamp(84px,14.3vh,126px)}
   .dark-page{background:var(--cover-deep);height:100%}
-  .dedic{color:var(--foil);height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:12%}
+  .dedic{color:var(--ded,var(--foil));height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:12%}
   .dedic p{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.05rem;line-height:1.8}
+  .dedic-edit{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.05rem;line-height:1.8;
+    outline:none;white-space:pre-wrap;width:100%;max-height:78%;overflow-y:auto;scrollbar-width:none;border-radius:6px;padding:6px 8px}
+  .dedic-edit::-webkit-scrollbar{display:none}
+  .dedic-edit:empty::before{content:attr(data-ph);opacity:.75;pointer-events:none}
+  .dedic-edit:focus-visible{outline:1.5px dashed var(--ded,var(--foil));outline-offset:4px}
   .newday{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:1rem}
   .newday h2{margin:0}
   .newday-btn{font-family:'Lora',serif;font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;
@@ -133,7 +138,7 @@
   .photo-grip{cursor:grab}
 
   /* popover de selección de color (crear post-it / recolorear) */
-  .color-popover{position:absolute;z-index:200;background:var(--paper);border:1px solid var(--line);
+  .color-popover{position:absolute;z-index:350;background:var(--paper);border:1px solid var(--line);
     border-radius:10px;padding:10px;box-shadow:0 10px 26px rgba(20,20,10,.28);display:none;
     flex-direction:column;gap:8px;min-width:150px}
   .color-popover.open{display:flex}
@@ -350,18 +355,14 @@
   .lightbox img{max-width:94vw;max-height:92vh;border-radius:5px;background:#fff;padding:8px;
     box-shadow:0 20px 60px rgba(0,0,0,.6)}
 
-  /* ===== estantería de libros (horizontal, sobre tabla de madera) ===== */
-  .shelf{position:fixed;left:14px;bottom:20px;z-index:70;max-width:46vw;
-    overflow:hidden;padding:6px 0 12px;border-radius:4px}
-  .shelf::after{content:"";position:absolute;left:0;right:0;bottom:0;height:12px;
-    border-radius:2px 3px 6px 6px;
+  /* ===== estantería de libros: filas apiladas, cada una con su tabla ===== */
+  .shelf{position:fixed;left:14px;bottom:18px;z-index:70;display:flex;flex-direction:column-reverse;gap:10px;max-width:44vw}
+  .shelf-row{position:relative;display:flex;flex-direction:row;align-items:flex-end;gap:2px;padding:0 8px 12px;border-radius:4px}
+  .shelf-row::after{content:"";position:absolute;left:0;right:0;bottom:0;height:12px;border-radius:2px 3px 6px 6px;
     background:linear-gradient(90deg,rgba(0,0,0,.14),transparent 3%,transparent 97%,rgba(0,0,0,.14)),
       repeating-linear-gradient(90deg,transparent 0 20px,rgba(90,60,30,.16) 20px 22px),
       linear-gradient(to bottom,#cf9f66,#ac7a41 52%,#8a5f2f);
     box-shadow:0 9px 18px rgba(20,25,45,.34),inset 0 1px 0 rgba(255,255,255,.28)}
-  .shelf-books{display:flex;flex-direction:row;align-items:flex-end;gap:2px;
-    overflow-x:auto;overflow-y:visible;padding:0 8px;scrollbar-width:none}
-  .shelf-books::-webkit-scrollbar{display:none}
   .shelf-spine{position:relative;flex:none;width:var(--sw,34px);height:var(--h,140px);border:none;cursor:pointer;padding:0;
     background:linear-gradient(90deg,#ccc3ac,#f6f1e4 45%,#f6f1e4 55%,#ccc3ac);
     background-size:cover;background-position:center;
@@ -409,10 +410,33 @@
   .cover-add.floating:hover{background:rgba(20,31,53,.9);color:var(--foil)}
   .hint.on-cover{position:absolute;bottom:16px;left:0;right:0;text-align:center;color:#fff;z-index:2;
     text-shadow:0 1px 6px rgba(0,0,0,.7)}
-  .shelf-menu{position:fixed;z-index:210;background:var(--paper);border:1px solid var(--line);
+  .shelf-menu{position:fixed;z-index:360;background:var(--paper);border:1px solid var(--line);
     border-radius:10px;padding:8px;box-shadow:0 10px 26px rgba(20,20,10,.28);display:none;
     flex-direction:column;gap:6px;min-width:180px}
   .shelf-menu.open{display:flex}
+
+  /* ===== menú móvil (pop-out) ===== */
+  .m-menu-btn{display:none}
+  .m-sheet{position:fixed;inset:0;z-index:340;display:none;background:rgba(15,20,35,.5)}
+  .m-sheet.open{display:block}
+  .m-sheet-panel{position:absolute;left:0;right:0;bottom:0;background:var(--paper);border-radius:16px 16px 0 0;
+    padding:10px 16px calc(20px + env(safe-area-inset-bottom));max-height:82vh;overflow-y:auto;
+    box-shadow:0 -10px 40px rgba(10,15,30,.4);transform:translateY(100%);transition:transform .28s}
+  .m-sheet.open .m-sheet-panel{transform:translateY(0)}
+  .m-sheet-grip{width:42px;height:4px;border-radius:2px;background:var(--line);margin:6px auto 10px}
+  .m-sheet h3{font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:var(--ink);margin:14px 4px 6px;font-weight:600;letter-spacing:.02em}
+  .m-book-row{display:flex;align-items:center;gap:12px;padding:9px 8px;border-radius:10px;cursor:pointer;border:1px solid transparent}
+  .m-book-row:active{background:rgba(201,169,106,.14)}
+  .m-book-row.current{border-color:var(--line);background:rgba(201,169,106,.1)}
+  .m-book-cover{width:34px;height:46px;border-radius:3px;flex:none;background:linear-gradient(90deg,#ccc3ac,#f6f1e4);
+    background-size:cover;background-position:center;box-shadow:inset 0 0 0 1px rgba(120,100,70,.4)}
+  .m-book-cover.dark{box-shadow:inset 0 0 0 1px rgba(201,169,106,.5)}
+  .m-book-name{flex:1;font-family:'Lora',serif;font-size:.92rem;color:var(--ink);min-width:0}
+  .m-book-tag{font-size:.6rem;color:var(--ink-soft);font-family:'Lora',serif;display:block;margin-top:1px}
+  .m-book-opts{font-size:20px;color:var(--ink-soft);padding:2px 10px;border-radius:8px;flex:none}
+  .m-action{display:flex;align-items:center;gap:10px;width:100%;padding:12px;margin-top:8px;border-radius:10px;
+    border:1px solid var(--line);background:transparent;font-family:'Lora',serif;font-size:.9rem;color:var(--ink);cursor:pointer}
+  .m-action.add{border-style:dashed;color:#7a5f2e}
   .shelf-menu .mini-btn{justify-content:flex-start;width:100%}
   .shelf-menu .mini-btn.danger{color:#9c4a3a;border-color:#d8b0a5}
   .shelf-menu .mini-btn.danger:hover{border-color:#9c4a3a}
@@ -423,7 +447,12 @@
   .scene,.mobile-book{transition:transform .45s cubic-bezier(.5,.05,.4,1),opacity .45s}
   body.book-out .scene,body.book-out .mobile-book{transform:translateX(-130%) rotate(-5deg);opacity:0}
   @media (max-width:700px){
-    .shelf{left:8px;right:auto;bottom:calc(52px + env(safe-area-inset-bottom));max-width:88vw}
+    .shelf{display:none}
+    .bible-open-m{display:none}
+    .m-menu-btn{display:flex;align-items:center;justify-content:center;position:fixed;
+      left:12px;top:calc(8px + env(safe-area-inset-top));z-index:88;width:42px;height:42px;border-radius:50%;
+      background:rgba(20,31,53,.92);color:var(--foil);border:1px solid rgba(201,169,106,.6);font-size:17px;cursor:pointer;
+      box-shadow:0 4px 12px rgba(10,15,30,.4)}
     .shelf-spine{width:calc(var(--sw,34px)*.74);height:calc(var(--h,140px)*.6)}
     .shelf-title{font-size:.56rem}
     .shelf-add{width:26px;height:32px;font-size:15px}
@@ -499,6 +528,12 @@
 
 <!-- Estantería de libros, portada y visor de fotos -->
 <div class="shelf" id="shelf"></div>
+<button class="m-menu-btn" id="mMenuBtn" aria-label="Menú de libros">📚</button>
+<div class="m-sheet" id="mSheet" aria-hidden="true" role="dialog" aria-label="Menú">
+  <div class="m-sheet-panel" id="mSheetPanel">
+    <div class="m-sheet-grip"></div>
+  </div>
+</div>
 <div class="shelf-menu" id="shelfMenu">
   <button class="mini-btn" data-smenu="cover">🖼 Poner / cambiar portada</button>
   <button class="mini-btn" data-smenu="color">🎨 Color del lomo</button>
@@ -592,10 +627,7 @@ let INDEX_ENTRIES=[];
 function buildPages(){
   PAGES=[];
   PAGES.push({type:'cover'});
-  PAGES.push({type:'dark', html:`<div class="dark-page"><div class="dedic">
-      <p>«Y si alguno prevaleciere contra uno,<br>dos le resistirán;<br>y cordón de tres dobleces<br>no se rompe pronto.»</p>
-      <p style="margin-top:1.4rem;font-size:.95rem;opacity:.8">— Eclesiastés 4:12 (RVR1960)</p>
-    </div></div>`});
+  PAGES.push({type:'dark',dk:'dedic_top',ph:'«Y si alguno prevaleciere contra uno,\ndos le resistirán;\ny cordón de tres dobleces\nno se rompe pronto.»\n\n— Eclesiastés 4:12 (RVR1960)'});
   PAGES.push({type:'index'});
   meta().days.forEach((dm,d)=>{
     SECTIONS.forEach(sec=>{
@@ -604,9 +636,7 @@ function buildPages(){
     });
   });
   PAGES.push({type:'newday'});
-  PAGES.push({type:'dark', html:`<div class="dark-page"><div class="dedic">
-      <p>✦<br><br>«Antes bien, creced en la gracia<br>y el conocimiento de nuestro<br>Señor y Salvador Jesucristo.<br>A él sea gloria ahora y hasta<br>el día de la eternidad. Amén.»<br><br>2 Pedro 3:18 (RVR1960)</p>
-    </div></div>`});
+  PAGES.push({type:'dark',dk:'dedic_end',ph:'«Antes bien, creced en la gracia\ny el conocimiento de nuestro\nSeñor y Salvador Jesucristo.\nA él sea gloria ahora y hasta\nel día de la eternidad. Amén.»\n\n2 Pedro 3:18 (RVR1960)'});
   if(PAGES.length%2)PAGES.push({type:'blank'});
 
   INDEX_ENTRIES=meta().days.map((dm,d)=>{
@@ -659,7 +689,17 @@ function pageEl(d,idx){
         <div class="hint">Toca para abrir</div>
       </div></div>`;
   }else if(d.type==='dark'){
-    w.innerHTML=d.html;
+    if(d.dk){
+      const val=state[d.dk]!=null?state[d.dk]:'';
+      w.innerHTML=`<div class="dark-page" style="${darkStyle()}"><div class="dedic">
+        <div class="dedic-edit" contenteditable="true" data-k="${d.dk}" data-ph="${escapeHtml(d.ph)}"
+          role="textbox" aria-multiline="true" aria-label="Dedicatoria"></div>
+      </div></div>`;
+      const ed=w.querySelector('.dedic-edit');
+      if(val)ed.innerHTML=val;
+    }else{
+      w.innerHTML=d.html;
+    }
   }else if(d.type==='blank'){
     w.innerHTML=`<div class="pg"></div>`;
   }else if(d.type==='index'){
@@ -763,37 +803,45 @@ const isMobile=()=>window.matchMedia('(max-width:700px)').matches;
 
 function rebuild(){
   buildPages();
+  const mob=isMobile();
+  /* ----- PC: libro 3D (solo si estamos en escritorio) ----- */
   book.innerHTML='<div class="base"></div>';
   leaves=[];
-  for(let i=0;i<PAGES.length;i+=2){
-    const leaf=document.createElement('div');leaf.className='leaf';
-    const f=document.createElement('div');f.className='face front';
-    const b=document.createElement('div');b.className='face back';
-    const pf=PAGES[i],pb=PAGES[i+1];
-    if(pf.type!=='cover'&&pf.type!=='dark')f.classList.add('paper');
-    if(pb&&pb.type!=='cover'&&pb.type!=='dark')b.classList.add('paper');
-    f.appendChild(pageEl(pf,i));
-    if(pb)b.appendChild(pageEl(pb,i+1));
-    const s1=document.createElement('div');s1.className='shade';
-    const s2=document.createElement('div');s2.className='shade';
-    f.appendChild(s1);b.appendChild(s2);
-    leaf.append(f,b);book.appendChild(leaf);leaves.push(leaf);
+  if(!mob){
+    for(let i=0;i<PAGES.length;i+=2){
+      const leaf=document.createElement('div');leaf.className='leaf';
+      const f=document.createElement('div');f.className='face front';
+      const b=document.createElement('div');b.className='face back';
+      const pf=PAGES[i],pb=PAGES[i+1];
+      if(pf.type!=='cover'&&pf.type!=='dark')f.classList.add('paper');
+      if(pb&&pb.type!=='cover'&&pb.type!=='dark')b.classList.add('paper');
+      f.appendChild(pageEl(pf,i));
+      if(pb)b.appendChild(pageEl(pb,i+1));
+      const s1=document.createElement('div');s1.className='shade';
+      const s2=document.createElement('div');s2.className='shade';
+      f.appendChild(s1);b.appendChild(s2);
+      leaf.append(f,b);book.appendChild(leaf);leaves.push(leaf);
+    }
+    const cr=document.createElement('div');cr.className='cast cast-r';
+    const cl=document.createElement('div');cl.className='cast cast-l';
+    book.append(cr,cl);
+    dcur=Math.min(dcur,leaves.length);
+    leaves.forEach((l,i)=>l.classList.toggle('flipped',i<dcur));
+    dz();
   }
-  const cr=document.createElement('div');cr.className='cast cast-r';
-  const cl=document.createElement('div');cl.className='cast cast-l';
-  book.append(cr,cl);
-  dcur=Math.min(dcur,leaves.length);
-  leaves.forEach((l,i)=>l.classList.toggle('flipped',i<dcur));
-  dz();
+  /* ----- Móvil: pila de páginas (solo si estamos en teléfono) ----- */
   mbook.innerHTML='';
-  mpages=PAGES.map((d,i)=>{
-    const el=document.createElement('div');el.className='mpage';
-    el.appendChild(pageEl(d,i));
-    const dim=document.createElement('div');dim.className='dim';
-    el.appendChild(dim);mbook.appendChild(el);return el;
-  });
-  mcur=Math.min(mcur,PAGES.length-1);
-  mRender();
+  mpages=[];
+  if(mob){
+    mpages=PAGES.map((d,i)=>{
+      const el=document.createElement('div');el.className='mpage';
+      el.appendChild(pageEl(d,i));
+      const dim=document.createElement('div');dim.className='dim';
+      el.appendChild(dim);mbook.appendChild(el);return el;
+    });
+    mcur=Math.min(mcur,PAGES.length-1);
+    mRender();
+  }
   fill();ui();
 }
 
@@ -911,6 +959,13 @@ nextB.addEventListener('click',goNext);
 prevB.addEventListener('click',goPrev);
 document.getElementById('undoB').addEventListener('click',performUndo);
 window.addEventListener('resize',ui);
+let _wasMobile=isMobile();
+window.matchMedia('(max-width:700px)').addEventListener('change',()=>{
+  const page=_wasMobile?mcur:Math.min(dcur*2,PAGES.length-1);
+  _wasMobile=isMobile();
+  rebuild();
+  goTo(page);
+});
 document.addEventListener('keydown',e=>{
   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();performUndo();return;}
   if(e.target.matches('input')||e.target.isContentEditable)return;
@@ -1496,7 +1551,7 @@ function fill(){
   document.querySelectorAll('[data-k]').forEach(f=>{
     const v=state[f.dataset.k];
     if(v==null||document.activeElement===f)return;
-    if(f.classList.contains('write')){if(f.innerHTML!==v)f.innerHTML=v;}
+    if(f.isContentEditable){if(f.innerHTML!==v)f.innerHTML=v;}
     else if(f.value!==v)f.value=v;
   });
   redrawInk();
@@ -1552,12 +1607,13 @@ document.addEventListener('beforeinput',e=>{
 document.addEventListener('input',e=>{
   const f=e.target.closest('[data-k]');
   if(!f)return;
-  const val=f.classList.contains('write')?f.innerHTML:f.value;
+  const isCE=f.isContentEditable;
+  const val=isCE?f.innerHTML:f.value;
   state[f.dataset.k]=val;
   markDirty(f.dataset.k);
   document.querySelectorAll(`[data-k="${f.dataset.k}"]`).forEach(o=>{
     if(o===f)return;
-    if(o.classList.contains('write')){if(o.innerHTML!==val)o.innerHTML=val;}
+    if(o.isContentEditable){if(o.innerHTML!==val)o.innerHTML=val;}
     else if(o.value!==val)o.value=val;
   });
   if(f.classList.contains('write')&&f.scrollHeight>f.clientHeight+4){
@@ -1626,6 +1682,27 @@ function spineDecls(b){
   if(b.sc)return `background:linear-gradient(90deg,${shade(b.sc,-18)},${b.sc} 45%,${b.sc} 55%,${shade(b.sc,-18)});`;
   return '';
 }
+/* color de fondo de las páginas de dedicatoria, adaptado a la portada del libro */
+function darkStyle(){
+  if(isMainBook())return '';
+  const en=libEntry(currentBookId)||{};
+  const a=meta().accent||en.sc;
+  if(!a)return 'background:linear-gradient(160deg,#3a3630,#221f1b);--ded:var(--foil);';
+  const b1=shade(a,-32),b2=shade(a,-60);
+  const txt=isDarkColor(b1)?'var(--foil)':'#241f16';
+  return `background:linear-gradient(160deg,${b1},${b2});--ded:${txt};`;
+}
+function avgColor(img){
+  try{
+    const c=document.createElement('canvas');c.width=24;c.height=24;
+    const ctx=c.getContext('2d');ctx.drawImage(img,0,0,24,24);
+    const d=ctx.getImageData(0,0,24,24).data;
+    let r=0,g=0,b=0,n=0;
+    for(let i=0;i<d.length;i+=4){r+=d[i];g+=d[i+1];b+=d[i+2];n++;}
+    r=Math.round(r/n);g=Math.round(g/n);b=Math.round(b/n);
+    return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
+  }catch(e){return null;}
+}
 function hashStr(s){let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return h;}
 function shelfH(id){return 118+hashStr(id)%34;}          /* 118–151 px, estable por libro */
 function shelfW(id){return 30+hashStr(id+'w')%12;}       /* 30–41 px */
@@ -1642,22 +1719,73 @@ function isDarkColor(hex){
   const r=(n>>16)&255,g=(n>>8)&255,b=n&255;
   return (r*299+g*587+b*114)/1000<150;
 }
+function spineHTML(b){
+  const dark=b.cover||(b.sc&&isDarkColor(b.sc));
+  const h=b.main?150:shelfH(b.id), wv=b.main?40:shelfW(b.id);
+  const band=b.cover?'':(b.sc?(isDarkColor(b.sc)?'rgba(201,169,106,.85)':'rgba(150,120,70,.6)'):'rgba(180,150,100,.6)');
+  const bandVar=band?`--band:${band};`:'';
+  return `<button class="shelf-spine ${dark?'dark':''} ${b.cover?'cover-spine':''}" data-book="${b.id}" title="Abrir «${escapeHtml(b.title)}»" style="--h:${h}px;--sw:${wv}px;${bandVar}${spineDecls(b)}">
+      <span class="shelf-title">${escapeHtml(b.title)}</span>
+      ${b.main?'':`<span class="shelf-opts" data-opts="${b.id}" title="Opciones del libro" role="button">⋯</span>`}
+    </button>`;
+}
+const PER_ROW=6;
 function renderShelf(){
   const shelf=document.getElementById('shelf');
   const entries=[{id:MAIN_BOOK_ID,title:'Creciendo en la Palabra',cover:null,sc:'#1c2b47',main:true},...library.books]
     .filter(b=>b.id!==currentBookId);
-  shelf.innerHTML='<div class="shelf-books">'+entries.map(b=>{
-    const dark=b.cover||(b.sc&&isDarkColor(b.sc));
-    const h=b.main?150:shelfH(b.id), wv=b.main?40:shelfW(b.id);
-    const band=b.cover?'':(b.sc?(isDarkColor(b.sc)?'rgba(201,169,106,.85)':'rgba(150,120,70,.6)'):'rgba(180,150,100,.6)');
-    const bandVar=band?`--band:${band};`:'';
-    return `<button class="shelf-spine ${dark?'dark':''} ${b.cover?'cover-spine':''}" data-book="${b.id}" title="Abrir «${escapeHtml(b.title)}»" style="--h:${h}px;--sw:${wv}px;${bandVar}${spineDecls(b)}">
-      <span class="shelf-title">${escapeHtml(b.title)}</span>
-      ${b.main?'':`<span class="shelf-opts" data-opts="${b.id}" title="Opciones del libro" role="button">⋯</span>`}
-    </button>`;
-  }).join('')
-  +`<button class="shelf-add" id="shelfAdd" title="Crear un libro nuevo" aria-label="Crear un libro nuevo">＋</button></div>`;
+  let rows='',row='',count=0;
+  entries.forEach(b=>{
+    row+=spineHTML(b);
+    if(++count%PER_ROW===0){rows+=`<div class="shelf-row">${row}</div>`;row='';}
+  });
+  row+=`<button class="shelf-add" id="shelfAdd" title="Crear un libro nuevo" aria-label="Crear un libro nuevo">＋</button>`;
+  rows+=`<div class="shelf-row">${row}</div>`;
+  shelf.innerHTML=rows;
+  renderMobileSheet(entries);
 }
+function renderMobileSheet(entries){
+  const panel=document.getElementById('mSheetPanel');
+  if(!panel)return;
+  const cur=[{id:MAIN_BOOK_ID,title:'Creciendo en la Palabra',main:true},...library.books].find(b=>b.id===currentBookId);
+  const curCover=isMainBook()?'':(meta().cover||'');
+  const curDark=isMainBook()||curCover||(libEntry(currentBookId)||{}).sc;
+  let h='<div class="m-sheet-grip"></div>';
+  h+='<h3>Libro abierto</h3>';
+  h+=`<div class="m-book-row current">
+      <span class="m-book-cover ${curDark?'dark':''}" style="${curCover?`background-image:url('${curCover}')`:(isMainBook()?'background:linear-gradient(90deg,#16233c,#24406b)':'')}"></span>
+      <span class="m-book-name">${escapeHtml(cur?cur.title:'—')}<span class="m-book-tag">Estás aquí</span></span>
+      ${isMainBook()?'':`<span class="m-book-opts" data-opts="${currentBookId}" role="button" aria-label="Opciones">⋯</span>`}
+    </div>`;
+  if(entries.length){
+    h+='<h3>Cambiar a otro libro</h3>';
+    entries.forEach(b=>{
+      const dark=b.cover||(b.main)||(b.sc&&isDarkColor(b.sc));
+      const bg=b.cover?`background-image:url('${b.cover}')`:(b.main?'background:linear-gradient(90deg,#16233c,#24406b)':(b.sc?`background:${b.sc}`:''));
+      h+=`<div class="m-book-row" data-mbook="${b.id}">
+          <span class="m-book-cover ${dark?'dark':''}" style="${bg}"></span>
+          <span class="m-book-name">${escapeHtml(b.title)}</span>
+          ${b.main?'':`<span class="m-book-opts" data-opts="${b.id}" role="button" aria-label="Opciones">⋯</span>`}
+        </div>`;
+    });
+  }
+  h+='<h3>&nbsp;</h3>';
+  h+=`<button class="m-action add" id="mAddBook">＋ &nbsp;Crear un libro nuevo</button>`;
+  h+=`<button class="m-action" id="mOpenBible">📖 &nbsp;Abrir la Biblia (Reina-Valera 1960)</button>`;
+  panel.innerHTML=h;
+}
+function openMSheet(){const s=document.getElementById('mSheet');s.classList.add('open');s.setAttribute('aria-hidden','false');}
+function closeMSheet(){const s=document.getElementById('mSheet');s.classList.remove('open');s.setAttribute('aria-hidden','true');}
+document.getElementById('mMenuBtn').addEventListener('click',openMSheet);
+document.getElementById('mSheet').addEventListener('click',async e=>{
+  if(e.target.id==='mSheet'){closeMSheet();return;}
+  const opts=e.target.closest('.m-book-opts');
+  if(opts){e.stopPropagation();openShelfMenu(opts,opts.dataset.opts);return;}
+  const row=e.target.closest('[data-mbook]');
+  if(row){closeMSheet();switchBook(row.dataset.mbook);return;}
+  if(e.target.closest('#mAddBook')){closeMSheet();createNewBook();return;}
+  if(e.target.closest('#mOpenBible')){closeMSheet();openReader();return;}
+});
 /* menú de opciones del lomo (portada, color, eliminar) */
 const shelfMenu=document.getElementById('shelfMenu');
 let shelfMenuBook=null;
@@ -1726,20 +1854,20 @@ async function switchBook(id){
   document.body.classList.remove('book-out');
   switching=false;
 }
+async function createNewBook(){
+  const name=prompt('Nombre del nuevo libro (por ejemplo: "Estudio de Helen"):');
+  if(!name||!name.trim())return;
+  const id='libro-'+Date.now();
+  const init={__meta:{days:[{pages:{},done:{},free:{}}],stickies:[],title:name.trim()}};
+  try{
+    await db.collection('cuaderno').doc(id).set({json:JSON.stringify(init),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+  }catch(err){toast('No se pudo crear el libro. Revisa tu conexión.');return;}
+  library.books.push({id,title:name.trim(),cover:null});
+  await saveLibrary();
+  switchBook(id);
+}
 document.addEventListener('click',async e=>{
-  if(e.target.id==='shelfAdd'){
-    const name=prompt('Nombre del nuevo libro (por ejemplo: "Estudio de Helen"):');
-    if(!name||!name.trim())return;
-    const id='libro-'+Date.now();
-    const init={__meta:{days:[{pages:{},done:{},free:{}}],stickies:[],title:name.trim()}};
-    try{
-      await db.collection('cuaderno').doc(id).set({json:JSON.stringify(init),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
-    }catch(err){toast('No se pudo crear el libro. Revisa tu conexión.');return;}
-    library.books.push({id,title:name.trim(),cover:null});
-    await saveLibrary();
-    switchBook(id);
-    return;
-  }
+  if(e.target.id==='shelfAdd'){createNewBook();return;}
   const opts=e.target.closest('.shelf-opts');
   if(opts){
     e.stopPropagation();
@@ -1760,9 +1888,10 @@ document.getElementById('coverInput').addEventListener('change',e=>{
   reader.onload=ev=>{
     const img=new Image();
     img.onload=async()=>{
-      const big=shrink(img,700,0.72),thumb=shrink(img,160,0.6);
+      const big=shrink(img,700,0.72),thumb=shrink(img,160,0.6),accent=avgColor(img);
       if(!target||target===currentBookId){
         meta().cover=big;
+        if(accent)meta().accent=accent;
         markDirty('__meta');
         queueSave();rebuild();
         const en=libEntry(currentBookId);
@@ -1773,6 +1902,7 @@ document.getElementById('coverInput').addEventListener('change',e=>{
           let st=s.exists&&s.data().json?JSON.parse(s.data().json):{__meta:{days:[{pages:{},done:{},free:{}}],stickies:[]}};
           if(!st.__meta)st.__meta={days:[{pages:{},done:{},free:{}}],stickies:[]};
           st.__meta.cover=big;
+          if(accent)st.__meta.accent=accent;
           await db.collection('cuaderno').doc(target).set({json:JSON.stringify(st),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
         }catch(err){toast('No se pudo guardar la portada.');return;}
         const en=libEntry(target);
