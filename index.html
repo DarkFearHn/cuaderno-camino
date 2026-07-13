@@ -1348,6 +1348,7 @@ function exitInk(){
   document.querySelectorAll('.pg.inking').forEach(pg=>pg.classList.remove('inking'));
   document.querySelectorAll('.marker-btn.active').forEach(b=>{b.classList.remove('active');b.title='Dibujar con marcador';});
   inkMode=null;
+  redrawInk(); /* colapsa a 0×0 los lienzos que quedaron sin dibujo */
 }
 function j01(a,b){const v=Math.sin(a*127.1+b*311.7)*43758.5453;return v-Math.floor(v);}
 function paintStroke(ctx,s,W,H){
@@ -1402,16 +1403,24 @@ function paintStroke(ctx,s,W,H){
 function drawCanvas(cv){
   const pid=cv.dataset.pid,pg=cv.closest('.pg');
   if(!pg)return;
+  const strokes=getStrokes(pid);
+  const active=inkMode&&inkMode.pid===pid;
+  /* páginas sin dibujo (y que no estás dibujando) NO reservan memoria:
+     así el teléfono no crea un lienzo enorme por cada página. */
+  if(!strokes.length&&!active){
+    if(cv.width>1){cv.width=0;cv.height=0;}
+    return;
+  }
   const W=pg.clientWidth,H=pg.clientHeight;
   if(!W||!H)return;
-  const dpr=window.devicePixelRatio||1;
+  const dpr=Math.min(window.devicePixelRatio||1,2); /* tope de 2 para no agotar memoria */
   const pw=Math.round(W*dpr),ph=Math.round(H*dpr);
   if(cv.width!==pw||cv.height!==ph){cv.width=pw;cv.height=ph;}
   cv.style.width=W+'px';cv.style.height=H+'px';
   const ctx=cv.getContext('2d');
   ctx.setTransform(dpr,0,0,dpr,0,0);
   ctx.clearRect(0,0,W,H);
-  getStrokes(pid).forEach(s=>paintStroke(ctx,s,W,H));
+  strokes.forEach(s=>paintStroke(ctx,s,W,H));
 }
 function redrawInk(pid){
   const sel=pid?`.ink[data-pid="${pid}"]`:'.ink';
