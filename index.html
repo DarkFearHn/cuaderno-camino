@@ -331,13 +331,19 @@
   .pg.inking .ink{pointer-events:auto;z-index:40;cursor:crosshair;touch-action:none}
   .pg.inking .pgfoot{position:relative;z-index:45}
   .marker-btn.active{border-color:var(--foil);background:rgba(201,169,106,.28)}
-  .color-popover.marker{min-width:224px}
+  .color-popover.marker{min-width:240px}
   .color-popover.marker .cp-swatches{flex-direction:column;align-items:stretch;gap:8px}
   .cp-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
-  .cp-tip{font-family:'Lora',serif;font-size:.6rem;letter-spacing:.03em;border:1px solid var(--line);
-    background:transparent;color:var(--ink-soft);border-radius:999px;padding:5px 9px;cursor:pointer}
+  .cp-brushes{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+  .cp-tip{font-family:'Lora',serif;font-size:.62rem;letter-spacing:.01em;border:1px solid var(--line);
+    background:transparent;color:var(--ink-soft);border-radius:8px;padding:6px 4px;cursor:pointer;text-align:center;white-space:nowrap}
   .cp-tip:hover{border-color:var(--foil)}
   .cp-tip.active{border-color:var(--foil);background:rgba(201,169,106,.22);color:#5a4620}
+  .cp-sizerow{gap:8px;padding:2px 2px 4px}
+  .cp-sizelabel{font-family:'Lora',serif;font-size:.62rem;color:var(--ink-soft);flex:none;min-width:66px}
+  .cp-size{flex:1;accent-color:#a9884e;height:20px}
+  .cp-sizedot{flex:none;background:#3a3226;border-radius:50%;display:inline-block;min-width:4px;min-height:4px;
+    box-shadow:0 1px 2px rgba(0,0,0,.3)}
   .cp-emoji{flex:1;min-width:100px;border:1px solid var(--line);border-radius:8px;padding:6px 8px;
     font-size:1rem;background:var(--paper);color:var(--ink)}
   .cp-emoji-go{font-family:'Lora',serif;font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;
@@ -1079,8 +1085,16 @@ const cpIcon=document.getElementById('cpIcon');
 let popoverMode=null, popoverPid=null, popoverSid=null;
 
 const MARKER_COLORS=['#d84a4a','#2f6fd8','#2f8f4e','#e0a020','#8a4bbf','#3a3226'];
-const MARKER_TIPS={fina:{w:3},gruesa:{w:8},resaltador:{w:16},crayola:{w:6},patron:{}};
-let markerTip='fina',markerEmojis='❤️ ⭐ ✨';
+const MARKER_BRUSHES={
+  lapiz:{label:'✏️ Lápiz',def:2,min:1,max:10},
+  marcador:{label:'🖊️ Marcador',def:5,min:2,max:22},
+  crayola:{label:'🖍️ Crayola',def:9,min:3,max:26},
+  resaltador:{label:'🖌️ Resaltador',def:18,min:8,max:42},
+  patron:{label:'😀 Patrón',def:24,min:12,max:54}
+};
+let markerBrush='marcador',markerEmojis='❤️ ⭐ ✨';
+const markerSizes={};
+Object.keys(MARKER_BRUSHES).forEach(k=>markerSizes[k]=MARKER_BRUSHES[k].def);
 function emojiTokens(str){
   str=String(str||'').trim();
   if(!str)return['❤️'];
@@ -1091,10 +1105,16 @@ function emojiTokens(str){
   return Array.from(str);
 }
 function buildMarkerPanel(){
-  const tips=[['fina','Fina'],['gruesa','Gruesa'],['resaltador','Resaltador'],['crayola','Crayola'],['patron','Patrón 😀']];
-  let h=`<div class="cp-row">${tips.map(([id,lb])=>
-    `<button class="cp-tip ${markerTip===id?'active':''}" data-tip="${id}">${lb}</button>`).join('')}</div>`;
-  if(markerTip==='patron'){
+  const B=MARKER_BRUSHES[markerBrush];
+  const size=markerSizes[markerBrush];
+  let h=`<div class="cp-row cp-brushes">${Object.keys(MARKER_BRUSHES).map(id=>
+    `<button class="cp-tip ${markerBrush===id?'active':''}" data-brush="${id}">${MARKER_BRUSHES[id].label}</button>`).join('')}</div>`;
+  h+=`<div class="cp-row cp-sizerow">
+      <span class="cp-sizelabel">${markerBrush==='patron'?'Tamaño emoji':'Grosor'}</span>
+      <input type="range" class="cp-size" min="${B.min}" max="${B.max}" value="${size}" step="1" aria-label="Tamaño de la punta">
+      <span class="cp-sizedot" style="width:${Math.min(size,30)}px;height:${Math.min(size,30)}px"></span>
+    </div>`;
+  if(markerBrush==='patron'){
     h+=`<div class="cp-row">
         <input class="cp-emoji" value="${markerEmojis}" placeholder="❤️ ⭐ ✨ (sepáralos con espacios)" aria-label="Emojis del patrón">
         <button class="cp-emoji-go">Dibujar</button>
@@ -1183,8 +1203,8 @@ function applyPopoverColor(color){
   closePopover();
 }
 cpSwatches.addEventListener('click',e=>{
-  const tip=e.target.closest('.cp-tip');
-  if(tip){markerTip=tip.dataset.tip;buildMarkerPanel();return;}
+  const brush=e.target.closest('.cp-tip');
+  if(brush){markerBrush=brush.dataset.brush;buildMarkerPanel();return;}
   const go=e.target.closest('.cp-emoji-go');
   if(go){
     const inp=cpSwatches.querySelector('.cp-emoji');
@@ -1200,6 +1220,13 @@ cpSwatches.addEventListener('click',e=>{
   const sw=e.target.closest('.csw:not(.custom)');
   if(!sw)return;
   applyPopoverColor(sw.dataset.c);
+});
+cpSwatches.addEventListener('input',e=>{
+  const sl=e.target.closest('.cp-size');
+  if(!sl)return;
+  markerSizes[markerBrush]=+sl.value;
+  const dot=cpSwatches.querySelector('.cp-sizedot');
+  if(dot){const d=Math.min(+sl.value,30);dot.style.width=d+'px';dot.style.height=d+'px';}
 });
 cpSwatches.addEventListener('change',e=>{
   const inp=e.target.closest('.custom-color-input');
@@ -1333,15 +1360,15 @@ function setStrokes(pid,arr){
   else{delete state[inkKey(pid)];deletedKeys.add(inkKey(pid));}
   markDirty(inkKey(pid));
 }
-let inkMode=null; /* {pid,color,erase,tip,emojis} */
+let inkMode=null; /* {pid,color,erase,brush,size,emojis} */
 function setInk(pid,color,erase){
   exitInk();
-  inkMode={pid,color,erase:!!erase,tip:markerTip,emojis:emojiTokens(markerEmojis)};
+  inkMode={pid,color,erase:!!erase,brush:markerBrush,size:markerSizes[markerBrush],emojis:emojiTokens(markerEmojis)};
   document.querySelectorAll(`.pg[data-pid="${pid}"]`).forEach(pg=>pg.classList.add('inking'));
   document.querySelectorAll(`.marker-btn[data-pid="${pid}"]`).forEach(b=>{b.classList.add('active');b.title=erase?'Borrando… toca para salir':'Dibujando… toca para salir';});
   redrawInk(pid);
-  const names={fina:'Marcador fino',gruesa:'Marcador grueso',resaltador:'Resaltador',crayola:'Crayola',patron:'Patrón de emojis'};
-  toast(erase?'Borrador activo: toca los trazos para borrarlos':(names[markerTip]||'Marcador')+' activo: dibuja sobre la página');
+  const names={lapiz:'Lápiz',marcador:'Marcador',resaltador:'Resaltador',crayola:'Crayola',patron:'Patrón de emojis'};
+  toast(erase?'Borrador activo: toca los trazos para borrarlos':(names[markerBrush]||'Marcador')+' activo: dibuja sobre la página');
 }
 function exitInk(){
   if(!inkMode)return;
@@ -1352,13 +1379,13 @@ function exitInk(){
 }
 function j01(a,b){const v=Math.sin(a*127.1+b*311.7)*43758.5453;return v-Math.floor(v);}
 function paintStroke(ctx,s,W,H){
-  const t=s.t||'fina';
+  const t=s.t||'marcador';
   const pts=[];
   for(let i=0;i<s.p.length;i+=2)pts.push([s.p[i]/1000*W,s.p[i+1]/1000*H]);
   if(!pts.length)return;
   if(t==='patron'){
     const em=(s.e&&s.e.length)?s.e:['❤️'];
-    const size=Math.max(15,Math.min(26,W*0.032));
+    const size=Math.max(12,s.w||24);
     ctx.globalAlpha=1;
     ctx.font=size+'px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",serif';
     ctx.textAlign='center';ctx.textBaseline='middle';
@@ -1378,6 +1405,7 @@ function paintStroke(ctx,s,W,H){
     }
     return;
   }
+  const w=s.w||5;
   const tracePath=(jitter,pass)=>{
     ctx.beginPath();
     for(let i=0;i<pts.length;i++){
@@ -1391,12 +1419,14 @@ function paintStroke(ctx,s,W,H){
   ctx.lineCap='round';ctx.lineJoin='round';
   ctx.strokeStyle=s.c||'#3a3226';
   if(t==='crayola'){
-    ctx.lineWidth=s.w||6;ctx.globalAlpha=.5;tracePath(false,0);
-    for(let pass=1;pass<=2;pass++){ctx.lineWidth=(s.w||6)*.65;ctx.globalAlpha=.28;tracePath(true,pass);}
+    ctx.lineWidth=w;ctx.globalAlpha=.5;tracePath(false,0);
+    for(let pass=1;pass<=2;pass++){ctx.lineWidth=w*.65;ctx.globalAlpha=.28;tracePath(true,pass);}
   }else if(t==='resaltador'){
-    ctx.lineWidth=s.w||16;ctx.globalAlpha=.32;tracePath(false,0);
-  }else{ /* fina, gruesa y trazos antiguos */
-    ctx.lineWidth=s.w||3;ctx.globalAlpha=.9;tracePath(false,0);
+    ctx.lineWidth=w;ctx.globalAlpha=.32;ctx.lineCap='butt';tracePath(false,0);
+  }else if(t==='lapiz'){
+    ctx.lineWidth=w;ctx.globalAlpha=.95;tracePath(false,0);
+  }else{ /* marcador (y trazos antiguos 'fina'/'gruesa') */
+    ctx.lineWidth=w;ctx.globalAlpha=.9;tracePath(false,0);
   }
   ctx.globalAlpha=1;
 }
@@ -1449,9 +1479,8 @@ document.addEventListener('pointerdown',e=>{
   const x=Math.round((e.clientX-r.left)/r.width*1000),y=Math.round((e.clientY-r.top)/r.height*1000);
   if(inkMode.erase){eraseAt(cv,x,y);inkStroke={erase:true,cv};return;}
   pushUndo();
-  const def=MARKER_TIPS[inkMode.tip]||MARKER_TIPS.fina;
-  const s={t:inkMode.tip,w:def.w,p:[x,y]};
-  if(inkMode.tip==='patron')s.e=inkMode.emojis;
+  const s={t:inkMode.brush,w:inkMode.size,p:[x,y]};
+  if(inkMode.brush==='patron')s.e=inkMode.emojis;
   else s.c=inkMode.color;
   inkStroke={cv,s};
   cv.setPointerCapture&&cv.setPointerCapture(e.pointerId);
