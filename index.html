@@ -228,6 +228,7 @@
   }
 
   /* ===== Biblia: lomo, lector y citas ===== */
+  .bible-spine{display:none!important} /* la Biblia ahora vive en el librero, como un libro más */
   .bible-spine{position:fixed;left:14px;top:50%;transform:translateY(-50%);
     width:52px;height:236px;border:none;cursor:pointer;z-index:70;padding:0;
     background:linear-gradient(90deg,var(--cover-deep),var(--cover) 42%,var(--cover) 58%,var(--cover-deep));
@@ -362,7 +363,18 @@
     box-shadow:0 20px 60px rgba(0,0,0,.6)}
 
   /* ===== estantería de libros: filas apiladas, cada una con su tabla ===== */
-  .shelf{position:fixed;left:14px;bottom:18px;z-index:70;display:flex;flex-direction:column-reverse;gap:10px;max-width:44vw}
+  .shelf{position:fixed;left:64px;bottom:18px;z-index:70;display:flex;flex-direction:column-reverse;gap:10px;max-width:44vw;
+    transition:opacity .2s,transform .2s}
+  .shelf.hidden{opacity:0;pointer-events:none;transform:translateX(-14px)}
+  /* botón redondo: mostrar / ocultar la librería */
+  .shelf-toggle{position:fixed;left:14px;bottom:18px;z-index:75;width:42px;height:42px;border-radius:50%;
+    border:none;cursor:pointer;background:linear-gradient(160deg,var(--cover),var(--cover-deep));
+    color:var(--foil);font-size:17px;display:flex;align-items:center;justify-content:center;
+    box-shadow:0 10px 22px rgba(20,25,45,.4),inset 0 0 0 1px rgba(201,169,106,.5);transition:transform .18s}
+  .shelf-toggle:hover{transform:scale(1.1)}
+  .shelf-toggle::before{content:"📚"}
+  .shelf-toggle.is-hidden::before{content:"📖"}
+  @media (max-width:700px){.shelf-toggle{display:none}}
   .shelf-row{position:relative;display:flex;flex-direction:row;align-items:flex-end;gap:2px;padding:0 8px 12px;border-radius:4px}
   .shelf-row::after{content:"";position:absolute;left:0;right:0;bottom:0;height:12px;border-radius:2px 3px 6px 6px;
     background:linear-gradient(90deg,rgba(0,0,0,.14),transparent 3%,transparent 97%,rgba(0,0,0,.14)),
@@ -483,11 +495,7 @@
   <div class="cp-swatches" id="cpSwatches"></div>
 </div>
 
-<!-- Biblia: lomo (PC), botón (móvil), lector y modal de cita -->
-<button class="bible-spine" id="bibleSpine" aria-label="Abrir la Biblia para leer">
-  <span class="bible-spine-title">La Biblia</span>
-  <span class="bible-spine-sub">RVR 1960</span>
-</button>
+<!-- Biblia: ahora es un lomo más dentro del librero (PC); botón (móvil), lector y modal de cita -->
 <button class="bible-open-m" id="bibleOpenM" aria-label="Abrir la Biblia">📖 Biblia</button>
 
 <div class="reader" id="reader" aria-hidden="true" role="dialog" aria-label="Lectura de la Biblia">
@@ -533,6 +541,7 @@
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <!-- Estantería de libros, portada y visor de fotos -->
+<button class="shelf-toggle" id="shelfToggle" aria-label="Mostrar u ocultar la librería" title="Mostrar/ocultar librería"></button>
 <div class="shelf" id="shelf"></div>
 <button class="m-menu-btn" id="mMenuBtn" aria-label="Menú de libros">📚</button>
 <div class="m-sheet" id="mSheet" aria-hidden="true" role="dialog" aria-label="Menú">
@@ -1764,13 +1773,14 @@ function spineHTML(b){
   const bandVar=band?`--band:${band};`:'';
   return `<button class="shelf-spine ${dark?'dark':''} ${b.cover?'cover-spine':''}" data-book="${b.id}" title="Abrir «${escapeHtml(b.title)}»" style="--h:${h}px;--sw:${wv}px;${bandVar}${spineDecls(b)}">
       <span class="shelf-title">${escapeHtml(b.title)}</span>
-      ${b.main?'':`<span class="shelf-opts" data-opts="${b.id}" title="Opciones del libro" role="button">⋯</span>`}
+      ${(b.main||b.bible)?'':`<span class="shelf-opts" data-opts="${b.id}" title="Opciones del libro" role="button">⋯</span>`}
     </button>`;
 }
 const PER_ROW=6;
 function renderShelf(){
   const shelf=document.getElementById('shelf');
-  const entries=[{id:MAIN_BOOK_ID,title:'Creciendo en la Palabra',cover:null,sc:'#1c2b47',main:true},...library.books]
+  const entries=[{id:'__bible__',title:'La Biblia',cover:null,sc:'#1c2b47',bible:true},
+      {id:MAIN_BOOK_ID,title:'Creciendo en la Palabra',cover:null,sc:'#1c2b47',main:true},...library.books]
     .filter(b=>b.id!==currentBookId);
   let rows='',row='',count=0;
   entries.forEach(b=>{
@@ -1795,9 +1805,10 @@ function renderMobileSheet(entries){
       <span class="m-book-name">${escapeHtml(cur?cur.title:'—')}<span class="m-book-tag">Estás aquí</span></span>
       ${isMainBook()?'':`<span class="m-book-opts" data-opts="${currentBookId}" role="button" aria-label="Opciones">⋯</span>`}
     </div>`;
-  if(entries.length){
+  const switchEntries=entries.filter(b=>!b.bible);
+  if(switchEntries.length){
     h+='<h3>Cambiar a otro libro</h3>';
-    entries.forEach(b=>{
+    switchEntries.forEach(b=>{
       const dark=b.cover||(b.main)||(b.sc&&isDarkColor(b.sc));
       const bg=b.cover?`background-image:url('${b.cover}')`:(b.main?'background:linear-gradient(90deg,#16233c,#24406b)':(b.sc?`background:${b.sc}`:''));
       h+=`<div class="m-book-row" data-mbook="${b.id}">
@@ -1913,8 +1924,18 @@ document.addEventListener('click',async e=>{
     return;
   }
   const spine=e.target.closest('.shelf-spine');
+  if(spine&&spine.dataset.book==='__bible__'){openReader();return;}
   if(spine&&spine.dataset.book)switchBook(spine.dataset.book);
 });
+/* botón redondo: mostrar / ocultar la librería */
+const shelfToggleBtn=document.getElementById('shelfToggle');
+if(shelfToggleBtn){
+  shelfToggleBtn.addEventListener('click',()=>{
+    const hidden=document.getElementById('shelf').classList.toggle('hidden');
+    shelfToggleBtn.classList.toggle('is-hidden',hidden);
+    shelfToggleBtn.title=hidden?'Mostrar librería':'Ocultar librería';
+  });
+}
 /* portada: se guarda dentro del libro y una miniatura en el lomo */
 let pendingCoverBook=null;
 document.getElementById('coverInput').addEventListener('change',e=>{
@@ -2113,7 +2134,6 @@ rdPrev.addEventListener('click',()=>{let bk=+rdBook.value,ch=+rdChap.value;if(ch
 rdNext.addEventListener('click',()=>{let bk=+rdBook.value,ch=+rdChap.value,b=bookByNum(bk);if(ch<b.ch)ch++;else if(bk<66){bk++;ch=1;}else return;rdBook.value=''+bk;fillChapSelect(rdChap,bk);rdChap.value=''+ch;loadReader();});
 document.getElementById('readerClose').addEventListener('click',closeReader);
 readerEl.addEventListener('click',e=>{if(e.target===readerEl)closeReader();});
-document.getElementById('bibleSpine').addEventListener('click',openReader);
 document.getElementById('bibleOpenM').addEventListener('click',openReader);
 rdBody.addEventListener('click',e=>{
   const v=e.target.closest('.verse');if(!v)return;
